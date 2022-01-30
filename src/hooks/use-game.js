@@ -11,6 +11,7 @@ import {
   length,
   modulo,
   reject,
+  sort,
   update
 } from 'ramda'
 
@@ -187,6 +188,7 @@ export const useGame = ({
   return {
     ...state,
     hasMoreThanTwoPlayers: state.numberOfPlayers > 2,
+    playersSortedByPoints: sort((player1, player2) => player2.score - player1.score, state.players),
     discardACard
   }
 }

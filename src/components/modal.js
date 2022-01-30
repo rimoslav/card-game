@@ -65,8 +65,11 @@ const Modal = () => {
           direction="col"
           align="center"
           justify="center">
-          <Text align="center">
-            {`WE HAVE ${numberOfWinners} WINNER${numberOfWinners > 1 ? 'S' : ''}`}
+          <Blank height={20} />
+          <Text
+            size={20}
+            weight="bold">
+            {`We have ${numberOfWinners} winner${numberOfWinners > 1 ? 's' : ''}!`}
           </Text>
           <Blank height={20} />
           {map(winner => (
@@ -74,10 +77,13 @@ const Modal = () => {
               key={winner.id}
               direction="col">
               <Blank height={10} />
-              <Text>{`${winner.name}, ${winner.score} points`}</Text>
+              <Text
+                size={18}
+                weight="bold"
+                color="silver">{`${winner.name} - ${winner.score} points`}</Text>
               <Blank height={10} />
             </Wrap>
-          ), gameHookObj.playersInTheLead)}
+          ), gameHookObj.playersSortedByPoints)}
           <Blank height={20} />
           <Button onClick={gameHookObj.navigateHome}>NEW GAME</Button>
         </Wrap>
