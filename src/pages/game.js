@@ -1,19 +1,15 @@
-import React, {
-  Fragment
-} from 'react'
+import React from 'react'
 import {
   useParams,
   useNavigate
 } from 'react-router-dom'
 import { includes } from 'ramda'
 
-import { NUMBER_OF_ROUNDS } from 'utils/variables'
 import { mapSizesToProps } from 'utils/helpers'
 
 import { Text } from 'components/common/text'
 import { Wrap } from 'components/common/wrap'
 import { Blank } from 'components/common/blank'
-import { Button } from 'components/common/button'
 import Player from 'components/player'
 import CommunityCards from 'components/community-cards'
 import PlayingTable from 'components/playing-table'
@@ -44,10 +40,6 @@ const Game = props => {
     navigateHome
   })
 
-  if (gameHookObj.isDealingCards) {
-    return <Text>Loading</Text>
-  }
-
   return (
     <GameContextProvider value={{
       ...gameHookObj,
@@ -59,7 +51,7 @@ const Game = props => {
           : 'center'
         }>
         {gameHookObj.isDealingCards
-          ? <Text size={24}>Loading</Text>
+          ? <Text size={30}>Loading</Text>
           : <Wrap
             flex={1}
             align={props.isLargeScreen && gameHookObj.hasMoreThanTwoPlayers
@@ -82,6 +74,7 @@ const Game = props => {
               order={!props.isLargeScreen ? 2 : 1}
               justify="center">
               <Player player={gameHookObj.players[0]} />
+              {/* WE CAN INSERT <CommunityCards /> HERE INSTEAD OF BELOW IF THERE ARE ONLY TWO PLAYERS */}
               <Blank height={40} />
               <Player player={gameHookObj.players[1]} />
             </Wrap>
@@ -90,17 +83,10 @@ const Game = props => {
               align="center"
               justify="center"
               order={!props.isLargeScreen ? 1 : 2}>
-              {NUMBER_OF_ROUNDS > 10
-                ? <Button onClick={navigateHome}>
-                  NEW GAME
-                </Button>
-                : <Fragment>
-                  <CommunityCards />
-                  {!props.isLargeScreen
-                    ? <Blank height={20} />
-                    : null
-                  }
-                </Fragment>
+              <CommunityCards />
+              {!props.isLargeScreen
+                ? <Blank height={20} />
+                : null
               }
             </Wrap>
             {gameHookObj.hasMoreThanTwoPlayers
