@@ -1,5 +1,5 @@
 export const USERS_POSITION = 0
-export const NUMBER_OF_ROUNDS = 10
+export const NUMBER_OF_CARDS_PER_PLAYER = 10
 export const TIME_BETWEEN_PLAYS_MS = 1000
 
 export const ALIGN = {
@@ -32,10 +32,11 @@ export const DIRECTION = {
 }
 
 export const CARDS_MAP = {
-  "ACE": 1,
-  "JACK": 12,
-  "QUEEN": 13,
-  "KING": 14
+  "0": 10,
+  "A": 1,
+  "J": 12,
+  "Q": 13,
+  "K": 14
 }
 
 export const CARD_DIMENSIONS = {

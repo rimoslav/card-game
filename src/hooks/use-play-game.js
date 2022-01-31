@@ -14,17 +14,12 @@ import {
   update
 } from 'ramda'
 
-import {
-  NUMBER_OF_ROUNDS,
-  TIME_BETWEEN_PLAYS_MS
-} from 'utils/variables'
+import { TIME_BETWEEN_PLAYS_MS } from 'utils/variables'
 import {
   findCardsSum,
   getRandomInt,
   transformResponse
 } from 'utils/helpers'
-
-import { drawCards } from 'services'
 
 
 
@@ -39,27 +34,8 @@ const initialState = {
   currentHandLeadId: 0
 }
 
-const gameReducer = (state, action) => {
+const playGameReducer = (state, action) => {
   switch (action.type) {
-    case 'DEAL_CARDS_REQUEST':
-      return {
-        ...state,
-        isDealingCards: true
-      }
-    case 'DEAL_CARDS_SUCCESS': {
-      const players = transformResponse(action.payload.cards)
-
-      return {
-        ...state,
-        players,
-        isDealingCards: false
-      }
-    }
-    case 'DEAL_CARDS_ERROR':
-      return {
-        ...state,
-        isDealingCards: false
-      }
     case 'CARD_DISCARDED': {
       const activePlayer = state.players[state.activePlayerId] // player that discarded the last card
       // if there're no cards in community, latest one has the biggest rank, otherwise we compare it to the biggest rank in community
@@ -120,16 +96,18 @@ const gameReducer = (state, action) => {
       }
     }
     default:
-      throw new Error('Invalid case in gameReducer')
+      throw new Error('Invalid case in playGameReducer')
   }
 }
 
-export const useGame = ({
-  deckId,
+export const usePlayGame = ({
   numberOfPlayers,
-  navigateHome
+  cards
 }) => {
-  const [state, dispatch] = useReducer(gameReducer, initialState)
+  const [state, dispatch] = useReducer(playGameReducer, {
+    ...initialState,
+    players: transformResponse(cards)
+  })
 
   const didMountRef = useRef(false)
 
@@ -150,30 +128,6 @@ export const useGame = ({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.activePlayerId])
-
-  useEffect(() => {
-    dealCards()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const dealCards = async () => {
-    dispatch({ type: 'DEAL_CARDS_REQUEST' })
-    try {
-      const cardsDealt = await drawCards({
-        deckId,
-        numberOfCards: numberOfPlayers * NUMBER_OF_ROUNDS
-      })
-
-      if (!cardsDealt.data.success) {
-        navigateHome()
-      } else {
-        dispatch({ type: 'DEAL_CARDS_SUCCESS', payload: cardsDealt.data })
-      }
-    } catch (e) {
-      dispatch({ type: 'DEAL_CARDS_ERROR' })
-      navigateHome()
-    }
-  }
 
   const discardACard = card => {
     dispatch({
@@ -200,6 +154,6 @@ export const useGame = ({
 
 const GameContext = createContext()
 
-export const GameContextProvider = GameContext.Provider
+export const PlayGameContextProvider = GameContext.Provider
 
-export const useGameContext = () => useContext(GameContext)
+export const usePlayGameContext = () => useContext(GameContext)

@@ -1,11 +1,12 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  join,
   map,
   range
 } from 'ramda'
 
-import { useDeck } from 'hooks/use-deck'
+import { useCreateNewGame } from 'hooks/use-create-game'
 
 import { Button } from 'components/common/button'
 import { Wrap } from 'components/common/wrap'
@@ -17,14 +18,19 @@ import PlayingTable from 'components/playing-table'
 
 const Home = () => {
   const navigate = useNavigate()
-  const {
-    isCreatingDeck,
-    deckId,
-  } = useDeck()
 
-  const goToGameScreen = numOfPlayers => {
-    navigate(`/game/${deckId}/${numOfPlayers}`)
+  const goToGameScreen = (numberOfPlayers, cardsArray) => {
+    // we can make custom function to make cardsString with only one loop
+    const cardCodesArray = map(card => card.code, cardsArray)
+    const cardsString = join('', cardCodesArray)
+
+    navigate(`game/players/${numberOfPlayers}/cards/${cardsString}`)
   }
+
+  const {
+    isLoading,
+    startNewGame
+  } = useCreateNewGame({ goToGameScreen })
 
   return (
     <PlayingTable>
@@ -44,9 +50,9 @@ const Home = () => {
             <Wrap key={num}>
               <Blank width={20} />
               <Button
-                onClick={() => goToGameScreen(num)}
+                onClick={() => startNewGame(num)}
                 textColor="darkSlateGray"
-                isDisabled={isCreatingDeck}>
+                isDisabled={isLoading}>
                 {`${num} Players`}
               </Button>
               <Blank width={20} />

@@ -10,7 +10,7 @@ import { Blank } from 'components/common/blank'
 import NameAndPoints from 'components/name-and-points'
 import PlayersCards from 'components/players-cards'
 
-import { useGameContext } from 'hooks/use-game'
+import { usePlayGameContext } from 'hooks/use-play-game'
 import { withWindowSize } from 'hooks/with-window-size'
 
 
@@ -21,7 +21,7 @@ export const Player = ({
   cardStickingOutPx,
   CARD_SIZE
 }) => {
-  const gameHookObj = useGameContext()
+  const gameHookObj = usePlayGameContext()
 
   if (!player) {
     return <Wrap flex={1} />

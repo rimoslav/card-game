@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import {
   length,
@@ -7,7 +8,7 @@ import {
 
 import {
   COLORS,
-  NUMBER_OF_ROUNDS
+  NUMBER_OF_CARDS_PER_PLAYER
 } from 'utils/variables'
 
 import { Wrap } from 'components/common/wrap'
@@ -15,7 +16,7 @@ import { Blank } from 'components/common/blank'
 import { Text } from 'components/common/text'
 import { Button } from 'components/common/button'
 
-import { useGameContext } from 'hooks/use-game'
+import { usePlayGameContext } from 'hooks/use-play-game'
 
 
 
@@ -53,10 +54,13 @@ const StyledModalContent = styled.div(props => {
 
 
 const Modal = () => {
-  const gameHookObj = useGameContext()
+  const navigate = useNavigate()
+  const gameHookObj = usePlayGameContext()
   const numberOfWinners = length(gameHookObj.playersInTheLead)
 
-  const isOpen = gameHookObj.roundNumber > NUMBER_OF_ROUNDS
+  const navigateHome = () => navigate('/')
+
+  const isOpen = gameHookObj.roundNumber > NUMBER_OF_CARDS_PER_PLAYER
 
   return (
     <StyledModalWrapper isOpen={isOpen}>
@@ -85,7 +89,7 @@ const Modal = () => {
             </Wrap>
           ), gameHookObj.playersSortedByPoints)}
           <Blank height={20} />
-          <Button onClick={gameHookObj.navigateHome}>NEW GAME</Button>
+          <Button onClick={navigateHome}>NEW GAME</Button>
         </Wrap>
       </StyledModalContent>
     </StyledModalWrapper>

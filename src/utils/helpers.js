@@ -2,12 +2,14 @@ import {
   addIndex,
   is,
   forEach,
-  length
+  length,
+  map,
+  match
 } from "ramda"
 
 import {
   CARD_DIMENSIONS,
-  NUMBER_OF_ROUNDS,
+  NUMBER_OF_CARDS_PER_PLAYER,
   CARDS_MAP,
   USERS_POSITION
 } from 'utils/variables'
@@ -51,20 +53,22 @@ export const findCardsSum = cards => {
   return cardsSum
 }
 
-// card.code is really enough of a data to play this game
-// we could start a game, place all 20, 30 or 40 cards in the URL like:
-// 5S6S9DJDAH8D6C8H3S3H4DKH0C7D4CAD3D9H9C3C5C9S2S0H4SAS5HJH6H8C7SQSQD2D8SKS0D2H2C5D
-// split into groups of 10s (per player), divide each group in 10 cards, like:
-// 5S 6S 9D JD AH 8D 6C 8H 3S 3H 4D ----> and get card ids, ranks, suits and images from there
-// that way we can reload the page, send a link to someone etc...
-export const transformResponse = cardsArray => {
-  let players = Array.from(Array(length(cardsArray) / NUMBER_OF_ROUNDS), () => ({
+// map and forEachIndexed can be easily combined into only one map function, but no time for that right now
+export const transformResponse = cardsString => {
+  const cardsArray = map(card => ({
+    id: card,
+    rank: Number(card[0]) || CARDS_MAP[card[0]], // '6' ---> 6, '0' ---> 10, J ---> 12
+    suit: card[1], // currently not used in the app
+    img: `https://deckofcardsapi.com/static/img/${card}.png`
+  }), match(/.{1,2}/g, cardsString))
+
+  let players = Array.from(Array(length(cardsArray) / NUMBER_OF_CARDS_PER_PLAYER), () => ({
     remainingCards: [],
     wonCards: []
   }))
 
   forEachIndexed((card, cardIndex) => {
-    const playersIndex = Math.floor(cardIndex / NUMBER_OF_ROUNDS)
+    const playersIndex = Math.floor(cardIndex / NUMBER_OF_CARDS_PER_PLAYER)
 
     players[playersIndex] = {
       ...players[playersIndex],
@@ -75,12 +79,7 @@ export const transformResponse = cardsArray => {
       score: 0,
       remainingCards: [
         ...players[playersIndex].remainingCards,
-        {
-          id: card.code,
-          rank: Number(card.value) || CARDS_MAP[card.value], // '6' ---> 6, JACK ---> 12
-          suit: card.suit, // currently not used in the app
-          img: card.image
-        }
+        card
       ]
     }
   }, cardsArray)

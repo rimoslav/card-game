@@ -11,7 +11,7 @@ import { mapSizesToProps } from 'utils/helpers'
 import { Wrap } from 'components/common/wrap'
 import { Card } from 'components/card'
 
-import { useGameContext } from 'hooks/use-game'
+import { usePlayGameContext } from 'hooks/use-play-game'
 import { withWindowSize } from 'hooks/with-window-size'
 
 
@@ -27,7 +27,7 @@ const CommunityCardWrapper = styled.div(props => ({
 
 
 const CommunityCards = ({ CARD_SIZE }) => {
-  const gameHookObj = useGameContext()
+  const gameHookObj = usePlayGameContext()
 
   return (
     <Wrap style={{

@@ -37,7 +37,7 @@ const App = () => {
 
           <Route
             index={false}
-            path="game/:deckId/:numberOfPlayers"
+            path="game/players/:numberOfPlayers/cards/:cards"
             element={<Game />}
           />
 

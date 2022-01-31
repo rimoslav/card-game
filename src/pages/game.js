@@ -1,19 +1,12 @@
-import React, {
-  Fragment
-} from 'react'
-import {
-  useParams,
-  useNavigate
-} from 'react-router-dom'
+import React from 'react'
+import { useParams } from 'react-router-dom'
 import { includes } from 'ramda'
 
-import { NUMBER_OF_ROUNDS } from 'utils/variables'
 import { mapSizesToProps } from 'utils/helpers'
 
 import { Text } from 'components/common/text'
 import { Wrap } from 'components/common/wrap'
 import { Blank } from 'components/common/blank'
-import { Button } from 'components/common/button'
 import Player from 'components/player'
 import CommunityCards from 'components/community-cards'
 import PlayingTable from 'components/playing-table'
@@ -21,38 +14,27 @@ import Modal from 'components/modal'
 
 import { withWindowSize } from 'hooks/with-window-size'
 import {
-  useGame,
-  GameContextProvider
-} from 'hooks/use-game'
+  usePlayGame,
+  PlayGameContextProvider
+} from 'hooks/use-play-game'
 
 
 
 const Game = props => {
-  const navigate = useNavigate()
   const {
-    deckId,
-    numberOfPlayers
+    numberOfPlayers,
+    cards
   } = useParams()
 
-  const navigateHome = () => navigate('/')
-
-  const gameHookObj = useGame({
-    deckId,
+  const gameHookObj = usePlayGame({
     numberOfPlayers: includes(Number(numberOfPlayers), [2, 3])
       ? Number(numberOfPlayers)
       : 4,
-    navigateHome
+    cards
   })
 
-  if (gameHookObj.isDealingCards) {
-    return <Text>Loading</Text>
-  }
-
   return (
-    <GameContextProvider value={{
-      ...gameHookObj,
-      navigateHome
-    }}>
+    <PlayGameContextProvider value={gameHookObj}>
       <PlayingTable
         align={props.isLargeScreen && gameHookObj.hasMoreThanTwoPlayers
           ? 'stretch'
@@ -90,17 +72,10 @@ const Game = props => {
               align="center"
               justify="center"
               order={!props.isLargeScreen ? 1 : 2}>
-              {NUMBER_OF_ROUNDS > 10
-                ? <Button onClick={navigateHome}>
-                  NEW GAME
-                </Button>
-                : <Fragment>
-                  <CommunityCards />
-                  {!props.isLargeScreen
-                    ? <Blank height={20} />
-                    : null
-                  }
-                </Fragment>
+              <CommunityCards />
+              {!props.isLargeScreen
+                ? <Blank height={20} />
+                : null
               }
             </Wrap>
             {gameHookObj.hasMoreThanTwoPlayers
@@ -119,7 +94,7 @@ const Game = props => {
         }
       </PlayingTable>
       <Modal />
-    </GameContextProvider>
+    </PlayGameContextProvider>
   )
 }
 
