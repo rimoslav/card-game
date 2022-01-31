@@ -61,7 +61,9 @@ const gameReducer = (state, action) => {
         isDealingCards: false
       }
     case 'CARD_DISCARDED': {
-      const activePlayer = state.players[state.activePlayerId]
+      const activePlayer = state.players[state.activePlayerId] // player that discarded the last card
+      // if there're no cards in community, latest one has the biggest rank, otherwise we compare it to the biggest rank in community
+      // if it's same or bigger, player who threw it takes the lead, otherwise lead stays the same
       const currentHandLeadId = length(state.community) && (action.payload.card.rank >= state.community[state.currentHandLeadId].rank)
         ? state.activePlayerId
         : state.currentHandLeadId
@@ -70,19 +72,20 @@ const gameReducer = (state, action) => {
         ...state,
         players: update(state.activePlayerId, {
           ...activePlayer,
-          remainingCards: reject(card => card.id === action.payload.card.id, activePlayer.remainingCards)
+          remainingCards: reject(card => card.id === action.payload.card.id, activePlayer.remainingCards) // reject the card that player chose
         }, state.players),
         community: [
           ...state.community,
-          action.payload.card
+          action.payload.card // and add it to community cards
         ],
-        activePlayerId: modulo(state.activePlayerId + 1, action.payload.numberOfPlayers),
-        canUserPlay: false,
+        activePlayerId: modulo(state.activePlayerId + 1, action.payload.numberOfPlayers), // increase by 1, or reset to 0
+        canUserPlay: false, // between throwing a card and allowing next player to play there's a delay, we don't wont to allow clicks in that period
         currentHandLeadId
       }
     }
     case 'FIND_HAND_WINNER': {
       const communitySum = findCardsSum(state.community)
+      // after we go through full round, we take all the cards from community, give it to the lead, and increase his score
       const handWinner = {
         ...state.players[state.currentHandLeadId],
         wonCards: [
@@ -94,6 +97,9 @@ const gameReducer = (state, action) => {
 
       let playersInTheLead = state.playersInTheLead
 
+      // if the hand lead (now winner, whole round's over) overthrows the game lead, he takes his place
+      // it he wins same number of points as the game lead, he's added to the list of leads
+      // there's at least 1 winner, and everybody can be a winner at the same time if they all have same number of points
       if (!length(state.playersInTheLead) || (handWinner.score > state.playersInTheLead[0].score)) {
         playersInTheLead = [handWinner]
       } else if (handWinner.score === state.playersInTheLead[0]?.score) {
