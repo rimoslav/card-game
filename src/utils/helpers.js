@@ -44,6 +44,13 @@ export const mapSizesToProps = ({ ww }) => ({
   isLargeScreen: ww >= 1200
 })
 
+export const findCardsSum = cards => {
+  let cardsSum = 0
+  forEach(card => cardsSum += card.rank, cards)
+
+  return cardsSum
+}
+
 export const transformResponse = cardsArray => {
   let players = Array.from(Array(length(cardsArray) / NUMBER_OF_ROUNDS), () => ({
     remainingCards: [],

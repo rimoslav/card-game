@@ -5,6 +5,7 @@ import {
   useParams,
   useNavigate
 } from 'react-router-dom'
+import { includes } from 'ramda'
 
 import { NUMBER_OF_ROUNDS } from 'utils/variables'
 import { mapSizesToProps } from 'utils/helpers'
@@ -37,7 +38,9 @@ const Game = props => {
 
   const gameHookObj = useGame({
     deckId,
-    numberOfPlayers,
+    numberOfPlayers: includes(Number(numberOfPlayers), [2, 3])
+      ? Number(numberOfPlayers)
+      : 4,
     navigateHome
   })
 

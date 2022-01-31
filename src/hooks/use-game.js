@@ -7,7 +7,6 @@ import {
 } from 'react'
 import {
   find,
-  includes,
   length,
   modulo,
   reject,
@@ -20,6 +19,7 @@ import {
   TIME_BETWEEN_PLAYS_MS
 } from 'utils/variables'
 import {
+  findCardsSum,
   getRandomInt,
   transformResponse
 } from 'utils/helpers'
@@ -30,10 +30,8 @@ import { drawCards } from 'services'
 
 const initialState = {
   isDealingCards: false,
-  numberOfPlayers: 0,
   players: [],
   community: [],
-  communitySum: 0,
   activePlayerId: 0,
   canUserPlay: true,
   roundNumber: 1,
@@ -64,7 +62,7 @@ const gameReducer = (state, action) => {
       }
     case 'CARD_DISCARDED': {
       const activePlayer = state.players[state.activePlayerId]
-      const currentHandLeadId = length(state.community) && (action.payload.rank >= state.community[state.currentHandLeadId].rank)
+      const currentHandLeadId = length(state.community) && (action.payload.card.rank >= state.community[state.currentHandLeadId].rank)
         ? state.activePlayerId
         : state.currentHandLeadId
 
@@ -72,26 +70,26 @@ const gameReducer = (state, action) => {
         ...state,
         players: update(state.activePlayerId, {
           ...activePlayer,
-          remainingCards: reject(card => card.id === action.payload.id, activePlayer.remainingCards)
+          remainingCards: reject(card => card.id === action.payload.card.id, activePlayer.remainingCards)
         }, state.players),
         community: [
           ...state.community,
-          action.payload
+          action.payload.card
         ],
-        communitySum: state.communitySum + action.payload.rank,
-        activePlayerId: modulo(state.activePlayerId + 1, state.numberOfPlayers),
+        activePlayerId: modulo(state.activePlayerId + 1, action.payload.numberOfPlayers),
         canUserPlay: false,
         currentHandLeadId
       }
     }
     case 'FIND_HAND_WINNER': {
+      const communitySum = findCardsSum(state.community)
       const handWinner = {
         ...state.players[state.currentHandLeadId],
         wonCards: [
           ...state.players[state.currentHandLeadId].wonCards,
           ...state.community
         ],
-        score: state.players[state.currentHandLeadId].score + state.communitySum
+        score: state.players[state.currentHandLeadId].score + communitySum
       }
 
       let playersInTheLead = state.playersInTheLead
@@ -110,7 +108,6 @@ const gameReducer = (state, action) => {
         roundNumber: state.roundNumber + 1,
         players: update(state.currentHandLeadId, handWinner, state.players),
         community: [],
-        communitySum: 0,
         canUserPlay: !state.activePlayerId,
         currentHandLeadId: 0,
         playersInTheLead
@@ -126,12 +123,7 @@ export const useGame = ({
   numberOfPlayers,
   navigateHome
 }) => {
-  const [state, dispatch] = useReducer(gameReducer, {
-    ...initialState,
-    numberOfPlayers: includes(Number(numberOfPlayers), [2, 3, 4])
-    ? Number(numberOfPlayers)
-    : 4,
-  })
+  const [state, dispatch] = useReducer(gameReducer, initialState)
 
   const didMountRef = useRef(false)
 
@@ -163,7 +155,7 @@ export const useGame = ({
     try {
       const cardsDealt = await drawCards({
         deckId,
-        numberOfCards: state.numberOfPlayers * NUMBER_OF_ROUNDS
+        numberOfCards: numberOfPlayers * NUMBER_OF_ROUNDS
       })
 
       if (!cardsDealt.data.success) {
@@ -178,7 +170,13 @@ export const useGame = ({
   }
 
   const discardACard = card => {
-    dispatch({ type: 'CARD_DISCARDED', payload: card })
+    dispatch({
+      type: 'CARD_DISCARDED',
+      payload: {
+        card,
+        numberOfPlayers
+      }
+    })
   }
 
   const findHandWinner = () => {
@@ -187,7 +185,8 @@ export const useGame = ({
 
   return {
     ...state,
-    hasMoreThanTwoPlayers: state.numberOfPlayers > 2,
+    numberOfPlayers,
+    hasMoreThanTwoPlayers: numberOfPlayers > 2,
     playersSortedByPoints: sort((player1, player2) => player2.score - player1.score, state.players),
     discardACard
   }
