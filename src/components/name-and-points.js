@@ -1,10 +1,10 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import { COLORS } from 'utils/variables'
+import { COLORS } from 'src/utils/variables'
 
-import { Wrap } from 'components/common/wrap'
-import { Text } from 'components/common/text'
+import { Wrap } from 'src/components/common/wrap'
+import { Text } from 'src/components/common/text'
 
 
 

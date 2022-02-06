@@ -3,43 +3,48 @@ import React, {
   useEffect
 } from 'react'
 
-import { debounce } from 'utils/helpers'
+import { debounce } from 'src/utils/helpers'
 
 
-// we use only one mapSizesToProps in this project (from /utils/helpers)
-// it should be separated into multipe - use only needed props in each component
-export const withWindowSize = mapSizesToProps => Component => props => {
-  const [dimensions, setDimensions] = useState({ 
-    width: undefined,
-    height: undefined
-  })
 
-  useEffect(() => {
-    const handleResize = () => {
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight
-      })
-    }
+export const withWindowSize = mapSizesToProps => Component => {
+  const MyComponent = props => {
+    const [dimensions, setDimensions] = useState({ 
+      width: undefined,
+      height: undefined
+    })
 
-    // set values on mount (initial values are undefined for cases where ssr is used
-    handleResize()
+    useEffect(() => {
+      const handleResize = () => {
+        setDimensions({
+          width: window.innerWidth,
+          height: window.innerHeight
+        })
+      }
 
-    const debouncedHandleResize = debounce(handleResize, 100)
+      // set values on mount (initial values are undefined for cases where ssr is used
+      handleResize()
 
-    window.addEventListener('resize', debouncedHandleResize)
+      const debouncedHandleResize = debounce(handleResize, 100)
 
-    return _ => {
-      window.removeEventListener('resize', debouncedHandleResize)
-    }
-  }, [])
+      window.addEventListener('resize', debouncedHandleResize)
 
-  const sizeProps = mapSizesToProps({ ww: dimensions.width, wh: dimensions.height })
+      return _ => {
+        window.removeEventListener('resize', debouncedHandleResize)
+      }
+    }, [])
 
-  return (
-    <Component
-      {...props}
-      {...sizeProps}
-    />
-  )
+    const sizeProps = mapSizesToProps({ ww: dimensions.width, wh: dimensions.height })
+
+    return (
+      <Component
+        {...props}
+        {...sizeProps}
+      />
+    )
+  }
+
+  MyComponent.displayName = 'WithWindowSizeComponent'
+
+  return MyComponent
 }

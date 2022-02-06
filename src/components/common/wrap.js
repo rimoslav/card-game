@@ -5,8 +5,8 @@ import PropTypes from 'prop-types'
 import {
   ALIGN,
   DIRECTION
-} from 'utils/variables'
-import { isNum } from 'utils/helpers'
+} from 'src/utils/variables'
+import { isNum } from 'src/utils/helpers'
 
 
 

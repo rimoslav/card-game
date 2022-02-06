@@ -6,12 +6,12 @@ import {
 } from 'ramda'
 import PropTypes from 'prop-types'
 
-import { mapSizesToProps } from 'utils/helpers'
+import { mapSizesToProps } from 'src/utils/helpers'
 
-import { withWindowSize } from 'hooks/with-window-size'
+import { withWindowSize } from 'src/hooks/with-window-size'
 
-import { Wrap } from "components/common/wrap"
-import { Card } from 'components/card'
+import { Wrap } from 'src/components/common/wrap'
+import { Card } from 'src/components/card'
 
 
 

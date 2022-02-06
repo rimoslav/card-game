@@ -2,11 +2,11 @@ import React from 'react'
 import styled from 'styled-components'
 import PropTypes from 'prop-types'
 
-import { mapSizesToProps } from 'utils/helpers'
+import { mapSizesToProps } from 'src/utils/helpers'
 
-import { Wrap } from 'components/common/wrap'
+import { Wrap } from 'src/components/common/wrap'
 
-import { withWindowSize } from 'hooks/with-window-size'
+import { withWindowSize } from 'src/hooks/with-window-size'
 
 
 

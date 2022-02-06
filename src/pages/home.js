@@ -6,13 +6,13 @@ import {
   range
 } from 'ramda'
 
-import { useCreateNewGame } from 'hooks/use-create-game'
+import { useCreateNewGame } from 'src/hooks/use-create-game'
 
-import { Button } from 'components/common/button'
-import { Wrap } from 'components/common/wrap'
-import { Blank } from 'components/common/blank'
-import { Text } from 'components/common/text'
-import PlayingTable from 'components/playing-table'
+import { Button } from 'src/components/common/button'
+import { Wrap } from 'src/components/common/wrap'
+import { Blank } from 'src/components/common/blank'
+import { Text } from 'src/components/common/text'
+import PlayingTable from 'src/components/playing-table'
 
 
 

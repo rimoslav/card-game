@@ -18,11 +18,11 @@ import {
 import {
   TIME_BETWEEN_PLAYS_MS,
   USERS_POSITION
-} from 'utils/variables'
+} from 'src/utils/variables'
 import {
   getRandomInt,
   mapCardsToPlayers
-} from 'utils/helpers'
+} from 'src/utils/helpers'
 
 
 
@@ -133,7 +133,6 @@ export const usePlayGame = ({
     } else { // the game is getting started, hook has mounted
       didMountRef.current = true
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.activePlayerId])
 
   const discardActivePlayersRandomCard = () => {

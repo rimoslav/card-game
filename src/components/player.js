@@ -2,16 +2,16 @@ import React from 'react'
 import { length } from 'ramda'
 import PropTypes from 'prop-types'
 
-import { USERS_POSITION } from 'utils/variables'
-import { mapSizesToProps } from 'utils/helpers'
+import { USERS_POSITION } from 'src/utils/variables'
+import { mapSizesToProps } from 'src/utils/helpers'
 
-import { Wrap } from 'components/common/wrap'
-import { Blank } from 'components/common/blank'
-import NameAndPoints from 'components/name-and-points'
-import PlayersCards from 'components/players-cards'
+import { Wrap } from 'src/components/common/wrap'
+import { Blank } from 'src/components/common/blank'
+import NameAndPoints from 'src/components/name-and-points'
+import PlayersCards from 'src/components/players-cards'
 
-import { usePlayGameContext } from 'hooks/use-play-game'
-import { withWindowSize } from 'hooks/with-window-size'
+import { usePlayGameContext } from 'src/hooks/use-play-game'
+import { withWindowSize } from 'src/hooks/with-window-size'
 
 
 
@@ -56,7 +56,7 @@ export const Player = ({
               moveCardValue={-cardWidth}
               totalWidth={cardWidth}
               cards={player.wonCards}
-          />
+            />
           </Wrap>
           : null
         }

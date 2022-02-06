@@ -5,8 +5,8 @@ import PropTypes from 'prop-types'
 
 
 const StyledBlank = styled.div(props => ({
-    [`padding${props.width ? 'Right' : 'Top'}`]: props.width || props.height
-  })
+  [`padding${props.width ? 'Right' : 'Top'}`]: props.width || props.height
+})
 )
 
 export const Blank = ({

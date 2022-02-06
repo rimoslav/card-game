@@ -5,7 +5,7 @@ import PropTypes from 'prop-types'
 import {
   ALIGN,
   COLORS
-} from 'utils/variables'
+} from 'src/utils/variables'
 
 
 
@@ -29,7 +29,7 @@ const StyledPlayingTable = styled.div(props => [
 ])
 
 const PlayingTable = ({
-  align = "center",
+  align = 'center',
   children
 }) => (
   <StyledPlayingTable align={align}>

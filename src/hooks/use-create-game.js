@@ -1,11 +1,11 @@
 import { useReducer } from 'react'
 
-import { NUMBER_OF_CARDS_PER_PLAYER } from 'utils/variables'
+import { NUMBER_OF_CARDS_PER_PLAYER } from 'src/utils/variables'
 
 import {
   createADeckAPI,
   drawCardsAPI
-} from 'services'
+} from 'src/services'
 
 
 

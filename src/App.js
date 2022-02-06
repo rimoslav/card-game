@@ -1,19 +1,19 @@
 
-import React from "react"
+import React from 'react'
 import {
   BrowserRouter as Router,
   Route,
   Routes
-} from "react-router-dom"
+} from 'react-router-dom'
 import {
   createGlobalStyle,
   ThemeProvider
 } from 'styled-components'
 
-import { COLORS } from "utils/variables"
+import { COLORS } from 'src/utils/variables'
 
-import Home from "pages/home"
-import Game from "pages/game"
+import Home from 'src/pages/home'
+import Game from 'src/pages/game'
 
 
 
@@ -47,4 +47,4 @@ const App = () => {
   )
 }
 
-export default App;
+export default App

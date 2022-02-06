@@ -4,14 +4,14 @@ import {
   forEach,
   length,
   match
-} from "ramda"
+} from 'ramda'
 
 import {
   CARD_SIZE,
   NUMBER_OF_CARDS_PER_PLAYER,
   CARDS_MAP,
   USERS_POSITION
-} from 'utils/variables'
+} from 'src/utils/variables'
 
 
 

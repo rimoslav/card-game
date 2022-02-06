@@ -9,14 +9,14 @@ import {
 import {
   COLORS,
   NUMBER_OF_CARDS_PER_PLAYER
-} from 'utils/variables'
+} from 'src/utils/variables'
 
-import { Wrap } from 'components/common/wrap'
-import { Blank } from 'components/common/blank'
-import { Text } from 'components/common/text'
-import { Button } from 'components/common/button'
+import { Wrap } from 'src/components/common/wrap'
+import { Blank } from 'src/components/common/blank'
+import { Text } from 'src/components/common/text'
+import { Button } from 'src/components/common/button'
 
-import { usePlayGameContext } from 'hooks/use-play-game'
+import { usePlayGameContext } from 'src/hooks/use-play-game'
 
 
 
@@ -49,7 +49,8 @@ const StyledModalContent = styled.div(props => {
     transform: `scale(${props.isOpen ? 1 : 0.33}) translate(-50%,-50%)`,
     opacity: props.isOpen ? 1 : 0,
     visibility: props.isOpen ? 'visible' : 'hidden'
-}})
+  }
+})
 
 
 
