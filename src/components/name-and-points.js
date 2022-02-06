@@ -8,13 +8,16 @@ import { Text } from 'components/common/text'
 
 
 
-const NameAndPoints = ({ player }) => {
+const NameAndPoints = ({
+  player,
+  isPlayerLeading
+}) => {
   return (
     <Wrap
       alignSelf="stretch"
       justify="between"
       style={{
-        background: COLORS.nameTag,
+        background: isPlayerLeading ? COLORS.nameTagLead : COLORS.nameTag,
         padding: 10,
         borderRadius: 5
       }}>
@@ -25,7 +28,8 @@ const NameAndPoints = ({ player }) => {
 }
 
 NameAndPoints.propTypes = {
-  player: PropTypes.object
+  player: PropTypes.object,
+  isPlayerLeading: PropTypes.bool
 }
 
 export default NameAndPoints

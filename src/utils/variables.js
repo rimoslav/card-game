@@ -16,11 +16,10 @@ export const COLORS = {
   secondary: "#255adf",
   white: "#fff",
   black: "#000",
-  pink: "#e6b8b8",
   silver: "#c0c0c0",
-  darkSilver: "#526473",
   darkSlateGray: "#2f4f4f",
   nameTag: "#2f4f4f1f",
+  nameTagLead: "#2f4f4f66",
   green: "#1E6B03"
 }
 
@@ -39,7 +38,7 @@ export const CARDS_MAP = {
   "K": 14
 }
 
-export const CARD_DIMENSIONS = {
+export const CARD_SIZE = {
   lg: {
     width: 113,
     height: 157

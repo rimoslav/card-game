@@ -6,6 +6,7 @@ import {
   useRef
 } from 'react'
 import {
+  any,
   find,
   length,
   modulo,
@@ -14,85 +15,98 @@ import {
   update
 } from 'ramda'
 
-import { TIME_BETWEEN_PLAYS_MS } from 'utils/variables'
 import {
-  findCardsSum,
+  TIME_BETWEEN_PLAYS_MS,
+  USERS_POSITION
+} from 'utils/variables'
+import {
   getRandomInt,
-  transformResponse
+  mapCardsToPlayers
 } from 'utils/helpers'
 
 
 
 const initialState = {
-  isDealingCards: false,
+  canUserPlay: true,
+  activePlayerId: 0,
+  roundNumber: 1,
   players: [],
   community: [],
-  activePlayerId: 0,
-  canUserPlay: true,
-  roundNumber: 1,
-  playersInTheLead: [],
-  currentHandLeadId: 0
+  gameLeads: []
 }
 
 const playGameReducer = (state, action) => {
   switch (action.type) {
     case 'CARD_DISCARDED': {
       const activePlayer = state.players[state.activePlayerId] // player that discarded the last card
-      // if there're no cards in community, latest one has the biggest rank, otherwise we compare it to the biggest rank in community
-      // if it's same or bigger, player who threw it takes the lead, otherwise lead stays the same
-      const currentHandLeadId = length(state.community) && (action.payload.card.rank >= state.community[state.currentHandLeadId].rank)
-        ? state.activePlayerId
-        : state.currentHandLeadId
 
       return {
         ...state,
+        canUserPlay: false, // between throwing a card and allowing next player to play there's a delay, we don't wont to allow clicks in that period
+        activePlayerId: modulo(state.activePlayerId + 1, action.payload.numberOfPlayers), // increase by 1, or reset to 0
         players: update(state.activePlayerId, {
           ...activePlayer,
-          remainingCards: reject(card => card.id === action.payload.card.id, activePlayer.remainingCards) // reject the card that player chose
+          remainingCards: reject(card => card.id === action.payload.cardObj.id, activePlayer.remainingCards) // reject the card that player chose
         }, state.players),
         community: [
           ...state.community,
-          action.payload.card // and add it to community cards
-        ],
-        activePlayerId: modulo(state.activePlayerId + 1, action.payload.numberOfPlayers), // increase by 1, or reset to 0
-        canUserPlay: false, // between throwing a card and allowing next player to play there's a delay, we don't wont to allow clicks in that period
-        currentHandLeadId
+          action.payload.cardObj // and add it to community cards
+        ]
       }
     }
-    case 'FIND_HAND_WINNER': {
-      const communitySum = findCardsSum(state.community)
-      // after we go through full round, we take all the cards from community, give it to the lead, and increase his score
-      const handWinner = {
-        ...state.players[state.currentHandLeadId],
-        wonCards: [
-          ...state.players[state.currentHandLeadId].wonCards,
-          ...state.community
-        ],
-        score: state.players[state.currentHandLeadId].score + communitySum
+    case 'HANDLE_ROUND_COMPLETED': {
+      let communitySum = state.community[0].rank
+      let roundWinnerId = 0
+      let gameLeads = [state.players[USERS_POSITION]]
+
+      // determine communitySum and roundWinnerId for this round, and gameLeads up until previous round, then update it after awarding roundWinner with latest points
+      for (let index = 1; index < action.payload; index++) {
+        communitySum += state.community[index].rank // increase community sum in each itteration
+
+        if (state.community[index].rank >= state.community[roundWinnerId].rank) { // if state.community[index] card has greater than or equal to rank to the current highest ranked card, it should replace it as the greatest, meaning player at that same index is the current round lead
+          roundWinnerId = index
+        }
+
+        if (state.roundNumber > 1) {
+          if (state.players[index].score > gameLeads[0].score) {
+            gameLeads = [state.players[index]]
+          } else if (state.players[index].score === gameLeads[0].score) {
+            gameLeads = [
+              ...gameLeads,
+              state.players[index]
+            ]
+          }
+        }
       }
 
-      let playersInTheLead = state.playersInTheLead
+      // we know who's round winner and cards he's getting, now let's set his new cards and score, before updating him in state
+      const roundWinnerUpdated = {
+        ...state.players[roundWinnerId],
+        wonCards: [
+          ...state.players[roundWinnerId].wonCards,
+          ...state.community
+        ],
+        score: state.players[roundWinnerId].score + communitySum
+      }
 
-      // if the hand lead (now winner, whole round's over) overthrows the game lead, he takes his place
-      // it he wins same number of points as the game lead, he's added to the list of leads
-      // there's at least 1 winner, and everybody can be a winner at the same time if they all have same number of points
-      if (!length(state.playersInTheLead) || (handWinner.score > state.playersInTheLead[0].score)) {
-        playersInTheLead = [handWinner]
-      } else if (handWinner.score === state.playersInTheLead[0]?.score) {
-        playersInTheLead = [
-          ...state.playersInTheLead,
-          handWinner
+      // we've calculated gameLeads with state from previous round (no way of knowing before)
+      // do one last check and see if list should be updated and how
+      if (roundWinnerUpdated.score > gameLeads[0].score) {
+        gameLeads = [roundWinnerUpdated]
+      } else if (roundWinnerUpdated.score === gameLeads[0].score) {
+        gameLeads = [
+          ...state.gameLeads,
+          roundWinnerUpdated
         ]
       }
 
       return {
         ...state,
-        roundNumber: state.roundNumber + 1,
-        players: update(state.currentHandLeadId, handWinner, state.players),
-        community: [],
         canUserPlay: !state.activePlayerId,
-        currentHandLeadId: 0,
-        playersInTheLead
+        roundNumber: state.roundNumber + 1,
+        players: update(roundWinnerId, roundWinnerUpdated, state.players),
+        community: [],
+        gameLeads
       }
     }
     default:
@@ -102,45 +116,49 @@ const playGameReducer = (state, action) => {
 
 export const usePlayGame = ({
   numberOfPlayers,
-  cards
+  cardsString
 }) => {
   const [state, dispatch] = useReducer(playGameReducer, {
     ...initialState,
-    players: transformResponse(cards)
+    players: mapCardsToPlayers(cardsString)
   })
 
   const didMountRef = useRef(false)
 
   useEffect(() => {
-    if (state.activePlayerId) {
-      const activePlayer = find(player => player.id === state.activePlayerId, state.players)
-      const cardIndex = getRandomInt(length(activePlayer.remainingCards))
-
-      setTimeout(() => {
-        discardACard(activePlayer.remainingCards[cardIndex])
-      }, TIME_BETWEEN_PLAYS_MS)
-    } else if (didMountRef.current) {
-      setTimeout(() => {
-        findHandWinner()
-      }, TIME_BETWEEN_PLAYS_MS)
-    } else {
+    if (state.activePlayerId !== USERS_POSITION) {
+      discardActivePlayersRandomCard()
+    } else if (didMountRef.current) { // we came full circle, it's user's turn again. before he can play we need to award community cards to round winner
+      handleRoundCompleted()
+    } else { // the game is getting started, hook has mounted
       didMountRef.current = true
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.activePlayerId])
 
-  const discardACard = card => {
+  const discardActivePlayersRandomCard = () => {
+    const activePlayer = find(player => player.id === state.activePlayerId, state.players)
+    const cardIndex = getRandomInt(length(activePlayer.remainingCards))
+
+    setTimeout(() => {
+      discardACard(activePlayer.remainingCards[cardIndex])
+    }, TIME_BETWEEN_PLAYS_MS)
+  }
+
+  const discardACard = cardObj => {
     dispatch({
       type: 'CARD_DISCARDED',
       payload: {
-        card,
+        cardObj,
         numberOfPlayers
       }
     })
   }
 
-  const findHandWinner = () => {
-    dispatch({ type: 'FIND_HAND_WINNER' })
+  const handleRoundCompleted = () => {
+    setTimeout(() => {
+      dispatch({ type: 'HANDLE_ROUND_COMPLETED', payload: numberOfPlayers })
+    }, TIME_BETWEEN_PLAYS_MS)
   }
 
   return {
@@ -148,6 +166,7 @@ export const usePlayGame = ({
     numberOfPlayers,
     hasMoreThanTwoPlayers: numberOfPlayers > 2,
     playersSortedByPoints: sort((player1, player2) => player2.score - player1.score, state.players),
+    getIsPlayerLeading: player => any(lead => lead.id === player.id)(state.gameLeads),
     discardACard
   }
 }

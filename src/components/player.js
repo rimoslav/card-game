@@ -19,7 +19,7 @@ export const Player = ({
   player,
   shouldShowWonCards,
   cardStickingOutPx,
-  CARD_SIZE
+  cardWidth
 }) => {
   const gameHookObj = usePlayGameContext()
 
@@ -34,7 +34,10 @@ export const Player = ({
       justify="center"
       align="center">
       <Blank height={20} />
-      <NameAndPoints player={player} />
+      <NameAndPoints
+        player={player}
+        isPlayerLeading={gameHookObj.getIsPlayerLeading(player)}
+      />
       <Blank height={20} />
       <Wrap>
         <PlayersCards
@@ -50,8 +53,8 @@ export const Player = ({
             <Blank width={10 + (10 - length(player.remainingCards)) * cardStickingOutPx} />
             <PlayersCards
               hasBorder
-              moveCardValue={-CARD_SIZE.width}
-              width={CARD_SIZE.width}
+              moveCardValue={-cardWidth}
+              totalWidth={cardWidth}
               cards={player.wonCards}
           />
           </Wrap>
@@ -86,10 +89,7 @@ Player.propTypes = {
   }),
   shouldShowWonCards: PropTypes.bool,
   cardStickingOutPx: PropTypes.number,
-  CARD_SIZE: PropTypes.shape({
-    width: PropTypes.number.isRequired,
-    height: PropTypes.number.isRequired
-  })
+  cardWidth: PropTypes.number.isRequired
 }
 
 export default withWindowSize(mapSizesToProps)(Player)

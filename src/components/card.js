@@ -25,24 +25,23 @@ const CardContent = ({
   card,
   left,
   onCardClick,
-  CARD_SIZE: {
-    width,
-    height
-  }
+  cardWidth,
+  cardHeight
 }) => (
   <Wrap
     style={{ left }}
     onClick={onCardClick
       ? () => onCardClick(card)
-      : undefined}> {/* avioding ternary here, so we don't get cursor: pointer on cards where there's no click */}
+      : undefined
+    }> {/* avioding optional chaining here, so we don't get cursor: pointer on cards where there's no click */}
     <StyledCard
       src={isFlipped
         ? `${process.env.PUBLIC_URL}/card-back.jpeg`
         : card.img
       }
       alt={`Card ${card.id}`}
-      width={width}
-      height={height}
+      width={cardWidth}
+      height={cardHeight}
     />
   </Wrap>
 )
@@ -57,10 +56,8 @@ CardContent.propTypes = {
   }).isRequired,
   left: PropTypes.number,
   onCardClick: PropTypes.func,
-  CARD_SIZE: PropTypes.shape({
-    width: PropTypes.number.isRequired,
-    height: PropTypes.number.isRequired
-  })
+  cardWidth: PropTypes.number.isRequired,
+  cardHeight: PropTypes.number.isRequired
 }
 
 export const Card = withWindowSize(mapSizesToProps)(CardContent)

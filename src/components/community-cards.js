@@ -5,6 +5,7 @@ import {
   map,
   range
 } from 'ramda'
+import PropTypes from 'prop-types'
 
 import { mapSizesToProps } from 'utils/helpers'
 
@@ -26,19 +27,22 @@ const CommunityCardWrapper = styled.div(props => ({
 }))
 
 
-const CommunityCards = ({ CARD_SIZE }) => {
+const CommunityCards = ({
+  cardWidth,
+  cardHeight
+}) => {
   const gameHookObj = usePlayGameContext()
 
   return (
     <Wrap style={{
-      width: gameHookObj.numberOfPlayers * (CARD_SIZE.width + 6),
-      height: CARD_SIZE.height
+      width: gameHookObj.numberOfPlayers * (cardWidth + 6),
+      height: cardHeight
     }}>
       {map(card => (
         <CommunityCardWrapper
           key={card.id}
-          width={CARD_SIZE.width}
-          height={CARD_SIZE.height}>
+          width={cardWidth}
+          height={cardHeight}>
           <Card card={card} />
         </CommunityCardWrapper>
       ), gameHookObj.community)}
@@ -46,12 +50,17 @@ const CommunityCards = ({ CARD_SIZE }) => {
         <CommunityCardWrapper
           key={num}
           theresNoCard
-          width={CARD_SIZE.width}
-          height={CARD_SIZE.height}
+          width={cardWidth}
+          height={cardHeight}
         />
       ), range(0, gameHookObj.numberOfPlayers - length(gameHookObj.community)))}
     </Wrap>
   )
+}
+
+CommunityCards.propTypes = {
+  cardWidth: PropTypes.number.isRequired,
+  cardHeight: PropTypes.number.isRequired
 }
 
 export default withWindowSize(mapSizesToProps)(CommunityCards)

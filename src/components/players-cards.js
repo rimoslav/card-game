@@ -21,14 +21,16 @@ const PlayersCards = ({
   hasBorder,
   areCardsFlipped = false,
   cardStickingOutPx,
-  CARD_SIZE,
+  cardWidth,
+  cardHeight,
   cards,
-  moveCardValue = -CARD_SIZE.width + cardStickingOutPx,
-  width = CARD_SIZE.width + (length(cards) - 1) * cardStickingOutPx,
+  moveCardValue = -cardWidth + cardStickingOutPx,
+  totalWidth = cardWidth + (length(cards) - 1) * cardStickingOutPx,
   onCardClick
 }) => (
   <Wrap style={{
-    width,
+    width: totalWidth,
+    height: cardHeight,
     border: hasBorder
       ? '2px solid white'
       : '',
@@ -50,10 +52,8 @@ PlayersCards.propTypes = {
   hasBorder: PropTypes.bool,
   areCardsFlipped: PropTypes.bool,
   cardStickingOutPx: PropTypes.number,
-  CARD_SIZE: PropTypes.shape({
-    width: PropTypes.number.isRequired,
-    height: PropTypes.number.isRequired
-  }),
+  cardWidth: PropTypes.number.isRequired,
+  cardHeight: PropTypes.number.isRequired,
   cards: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,
@@ -63,7 +63,7 @@ PlayersCards.propTypes = {
     })
   ),
   moveCardValue: PropTypes.number,
-  width: PropTypes.number,
+  totalWidth: PropTypes.number,
   onCardClick: PropTypes.func
 }
 

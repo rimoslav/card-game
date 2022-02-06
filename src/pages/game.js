@@ -30,16 +30,15 @@ const Game = props => {
     numberOfPlayers: includes(Number(numberOfPlayers), [2, 3])
       ? Number(numberOfPlayers)
       : 4,
-    cards
+    cardsString: cards
   })
 
   return (
     <PlayGameContextProvider value={gameHookObj}>
-      <PlayingTable
-        align={props.isLargeScreen && gameHookObj.hasMoreThanTwoPlayers
+      <PlayingTable align={props.isLargeScreen && gameHookObj.hasMoreThanTwoPlayers
           ? 'stretch'
           : 'center'
-        }>
+      }>
         {gameHookObj.isDealingCards
           ? <Text size={24}>Loading</Text>
           : <Wrap

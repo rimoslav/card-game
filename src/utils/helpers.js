@@ -3,12 +3,11 @@ import {
   is,
   forEach,
   length,
-  map,
   match
 } from "ramda"
 
 import {
-  CARD_DIMENSIONS,
+  CARD_SIZE,
   NUMBER_OF_CARDS_PER_PLAYER,
   CARDS_MAP,
   USERS_POSITION
@@ -36,33 +35,25 @@ export const debounce = function (fn, ms) {
   }
 }
 
-// we shouldn't use object CARD_SIZE here. it should be separated into two values - cardWidth and cardHeight
-export const mapSizesToProps = ({ ww }) => ({
-  CARD_SIZE: ww >= 1500 || (ww < 1200 && ww >= 700)
-    ? CARD_DIMENSIONS.lg
-    : CARD_DIMENSIONS.sm,
-  shouldShowWonCards: ww >= 400,
-  cardStickingOutPx: ww < 1200 && ww >= 700 ? 30 : 20,
-  isLargeScreen: ww >= 1200
-})
+export const mapSizesToProps = ({ ww }) => {
+  const CARD_DIMENSIONS = ww >= 1500 || (ww < 1200 && ww >= 700)
+    ? CARD_SIZE.lg
+    : CARD_SIZE.sm
 
-export const findCardsSum = cards => {
-  let cardsSum = 0
-  forEach(card => cardsSum += card.rank, cards)
-
-  return cardsSum
+  return {
+    cardWidth: CARD_DIMENSIONS.width,
+    cardHeight: CARD_DIMENSIONS.height,
+    shouldShowWonCards: ww >= 400,
+    cardStickingOutPx: ww < 1200 && ww >= 700 ? 30 : 20,
+    isLargeScreen: ww >= 1200
+  }
 }
 
-// map and forEachIndexed can be easily combined into only one map function, but no time for that right now
-export const transformResponse = cardsString => {
-  const cardsArray = map(card => ({
-    id: card,
-    rank: Number(card[0]) || CARDS_MAP[card[0]], // '6' ---> 6, '0' ---> 10, J ---> 12
-    suit: card[1], // currently not used in the app
-    img: `https://deckofcardsapi.com/static/img/${card}.png`
-  }), match(/.{1,2}/g, cardsString))
-
-  let players = Array.from(Array(length(cardsArray) / NUMBER_OF_CARDS_PER_PLAYER), () => ({
+export const mapCardsToPlayers = cardsString => {
+  // eg. cardsString consists of 80 chars, 2 chars per card (first determening rank, the second determening suit) => 40 cards
+  // 40 cards, 10 cards per player => 4 players
+  // create players array as an array of 4 arrays
+  let players = Array.from(Array(length(cardsString) / (2 * NUMBER_OF_CARDS_PER_PLAYER)), () => ({
     remainingCards: [],
     wonCards: []
   }))
@@ -79,10 +70,15 @@ export const transformResponse = cardsString => {
       score: 0,
       remainingCards: [
         ...players[playersIndex].remainingCards,
-        card
+        {
+          id: card,
+          rank: Number(card[0]) || CARDS_MAP[card[0]], // '6' ---> 6, '0' ---> 10, J ---> 12
+          suit: card[1], // currently not used in the app
+          img: `https://deckofcardsapi.com/static/img/${card}.png`
+        }
       ]
     }
-  }, cardsArray)
+  }, match(/.{1,2}/g, cardsString))
 
   return players
 }

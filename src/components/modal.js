@@ -56,7 +56,7 @@ const StyledModalContent = styled.div(props => {
 const Modal = () => {
   const navigate = useNavigate()
   const gameHookObj = usePlayGameContext()
-  const numberOfWinners = length(gameHookObj.playersInTheLead)
+  const numberOfWinners = length(gameHookObj.gameLeads)
 
   const navigateHome = () => navigate('/')
 
