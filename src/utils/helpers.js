@@ -74,7 +74,9 @@ export const mapCardsToPlayers = cardsString => {
           id: card,
           rank: Number(card[0]) || CARDS_MAP[card[0]], // '6' ---> 6, '0' ---> 10, J ---> 12
           suit: card[1], // currently not used in the app
-          img: `https://deckofcardsapi.com/static/img/${card}.png`
+          img: card === 'AD'
+            ? `${process.env.PUBLIC_URL}/ace-of-diamonds.png`
+            : `https://deckofcardsapi.com/static/img/${card}.png`
         }
       ]
     }
