@@ -106,3 +106,57 @@ describe('clearGame', () => {
     expect(loadGame()).toBeNull()
   })
 })
+
+describe('saveGame rejects unencodable input', () => {
+  it('throws rather than writing a placeholder token', () => {
+    expect(() => saveGame({ playerCount: 2, hands: [['ZZ', ...handOf(0).slice(1)], handOf(10)] }))
+      .toThrow(/unknown card code/)
+  })
+
+  it('throws for a prototype property name posing as a code', () => {
+    expect(() => saveGame({ playerCount: 2, hands: [['constructor', ...handOf(0).slice(1)], handOf(10)] }))
+      .toThrow(/unknown card code/)
+  })
+})
+
+// Safari private mode and blocked-storage settings make localStorage throw on access.
+describe('an unavailable store', () => {
+  const throwingStore = (): Storage => ({
+    get length(): number {
+      throw new DOMException('denied', 'SecurityError')
+    },
+    clear: () => {
+      throw new DOMException('denied', 'SecurityError')
+    },
+    getItem: () => {
+      throw new DOMException('denied', 'SecurityError')
+    },
+    key: () => {
+      throw new DOMException('denied', 'SecurityError')
+    },
+    removeItem: () => {
+      throw new DOMException('denied', 'SecurityError')
+    },
+    setItem: () => {
+      throw new DOMException('denied', 'SecurityError')
+    }
+  })
+
+  it('makes loadGame return null instead of throwing', () => {
+    setStore(throwingStore())
+
+    expect(loadGame()).toBeNull()
+  })
+
+  it('makes clearGame a no-op instead of throwing', () => {
+    setStore(throwingStore())
+
+    expect(() => clearGame()).not.toThrow()
+  })
+
+  it('lets saveGame throw, so the caller can report the failure', () => {
+    setStore(throwingStore())
+
+    expect(() => saveGame({ playerCount: 2, hands: [handOf(0), handOf(10)] })).toThrow()
+  })
+})

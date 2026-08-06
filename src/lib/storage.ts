@@ -24,6 +24,17 @@ export const setStore = (store: Storage | null): void => {
 
 const getStore = (): Storage => injectedStore ?? window.localStorage
 
+// Reading localStorage can throw outright, not just return null — Safari private mode and
+// blocked-storage settings raise SecurityError on access, and quota limits raise on write.
+// A missing game is a normal state, so a throwing store is treated as "no game stored".
+const readRaw = (): string | null => {
+  try {
+    return getStore().getItem(KEY)
+  } catch {
+    return null
+  }
+}
+
 const isStoredPayload = (value: unknown): value is StoredPayload => {
   if (typeof value !== 'object' || value === null) {
     return false
@@ -37,17 +48,26 @@ const isStoredPayload = (value: unknown): value is StoredPayload => {
 }
 
 export const saveGame = (game: StoredGame): void => {
-  const payload: StoredPayload = {
-    v: VERSION,
-    p: game.playerCount,
-    h: game.hands.map(hand => hand.map(code => encodeCard(code) ?? ''))
-  }
+  // Throw rather than writing a placeholder for an unencodable code. Writing '' would
+  // produce a payload that loadGame later rejects, bouncing the player back to the home
+  // screen with no explanation; throwing lets the caller's catch surface a real message.
+  const h = game.hands.map(hand => hand.map(code => {
+    const token = encodeCard(code)
 
-  getStore().setItem(KEY, JSON.stringify(payload))
+    if (token === undefined) {
+      throw new Error(`Cannot save game: unknown card code ${JSON.stringify(code)}`)
+    }
+
+    return token
+  }))
+
+  // Deliberately not caught: if the store is unavailable, the caller must know the game
+  // was not saved rather than navigate to a game screen that cannot load.
+  getStore().setItem(KEY, JSON.stringify({ v: VERSION, p: game.playerCount, h } satisfies StoredPayload))
 }
 
 export const loadGame = (): StoredGame | null => {
-  const raw = getStore().getItem(KEY)
+  const raw = readRaw()
 
   if (raw === null) {
     return null
@@ -97,5 +117,9 @@ export const loadGame = (): StoredGame | null => {
 }
 
 export const clearGame = (): void => {
-  getStore().removeItem(KEY)
+  try {
+    getStore().removeItem(KEY)
+  } catch {
+    // an unavailable store has nothing to clear
+  }
 }
