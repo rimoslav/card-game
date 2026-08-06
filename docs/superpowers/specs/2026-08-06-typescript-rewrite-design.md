@@ -48,7 +48,7 @@ Alongside that, this rewrite delivers six explicit requirements:
 | `.eslintrc.js` + `@babel/eslint-parser` | `eslint.config.js` (flat) + `typescript-eslint` | 10.8.0 / 8.66.0 |
 | `babel.config.js`, `jsconfig.json` | `vite.config.ts`, `tsconfig.json` | — |
 
-Retained: `react` / `react-dom` 19.2.8, `react-router-dom` 7.18.2.
+Retained: `react` / `react-dom` 19.2.8, `react-router` 8.3.0.
 
 Runtime dependencies drop from **12 to 3**.
 
@@ -79,11 +79,14 @@ vitest `^20 || ^22 || >=24`).
 ```jsonc
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": { "@cg/*": ["src/*"] }
+    "paths": { "@cg/*": ["./src/*"] }
   }
 }
 ```
+
+Deliberately no `baseUrl`: TypeScript 6.0.3 rejects it (`TS5101`, removed in TS 7). Without
+it, `paths` resolve relative to `tsconfig.json`, and the targets need the `./` prefix or TS
+raises `TS5090`.
 
 `vite.config.ts` carries the matching runtime alias:
 

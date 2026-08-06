@@ -6,7 +6,7 @@
 
 **Architecture:** A static React SPA. Pure logic (card tokens, storage, game reducer) lives in `src/lib` and `src/hooks` as dependency-free modules covered by Vitest. Presentation uses CSS Modules with CSS custom properties, so all responsive behaviour is media queries rather than a JS resize listener. Game state moves from URL params into a single obfuscated `localStorage` key.
 
-**Tech Stack:** Vite 8.2.1, React 19.2.8, TypeScript 6.0.3, react-router-dom 7.18.2, Vitest 4.1.10, ESLint 10.8.0 + typescript-eslint 8.66.0, CSS Modules.
+**Tech Stack:** Vite 8.2.1, React 19.2.8, TypeScript 6.0.3, react-router 8.3.0, Vitest 4.1.10, ESLint 10.8.0 + typescript-eslint 8.66.0, CSS Modules.
 
 **Spec:** `docs/superpowers/specs/2026-08-06-typescript-rewrite-design.md`
 
@@ -14,9 +14,10 @@
 
 - **Code style — match the existing codebase:** no semicolons, single quotes, 2-space indent, arrow-function components. Every code block in this plan already follows it.
 - **Absolute imports only.** All intra-project imports use `@cg/...`. The single exception is a sibling `./x.module.css`, which CSS Modules require. An ESLint rule enforces this.
-- **Exact versions, pinned (no `^`):** react 19.2.8, react-dom 19.2.8, react-router-dom 7.18.2, vite 8.2.1, @vitejs/plugin-react 6.0.5, typescript 6.0.3, vitest 4.1.10, eslint 10.8.0, typescript-eslint 8.66.0, @eslint/js 10.0.1, eslint-plugin-react-hooks 7.1.1, globals 17.9.0, @types/react 19.2.18, @types/react-dom 19.2.4.
+- **Exact versions, pinned (no `^`):** react 19.2.8, react-dom 19.2.8, react-router 8.3.0, vite 8.2.1, @vitejs/plugin-react 6.0.5, typescript 6.0.3, vitest 4.1.10, eslint 10.8.0, typescript-eslint 8.66.0, @eslint/js 10.0.1, eslint-plugin-react-hooks 7.1.1, globals 17.9.0, @types/node 24.13.3, @types/react 19.2.18, @types/react-dom 19.2.4.
 - **TypeScript is 6.0.3, NOT 7.x.** TS 7 exists but `typescript-eslint@8.66.0` requires `>=4.8.4 <6.1.0`. Installing TS 7 breaks linting entirely. Do not "helpfully" upgrade it.
-- **Runtime dependencies are exactly three:** `react`, `react-dom`, `react-router-dom`. Adding any other `dependencies` entry defeats the purpose of this rewrite. Everything else is a `devDependency`.
+- **Runtime dependencies are exactly three:** `react`, `react-dom`, `react-router`. Adding any other `dependencies` entry defeats the purpose of this rewrite. Everything else is a `devDependency`.
+- **Use `react-router`, NOT `react-router-dom`.** `react-router-dom` is a frozen legacy shim: its latest release (7.18.2) hard-pins `react-router: 7.18.2`, which carries the high-severity advisory GHSA-qwww-vcr4-c8h2 (`>=7.12.0 <8.3.0`). v8 absorbed the DOM package, so `react-router@8.3.0` is both the patched version and the current one. It exports `BrowserRouter`, `Routes`, `Route`, `Navigate` and `useNavigate` — verified. Import every router symbol from `'react-router'`.
 - **Forbidden packages:** `ramda`, `axios`, `styled-components`, `prop-types`, `web-vitals`, `react-scripts`, `@testing-library/*`, `jsdom`, `happy-dom`. Do not reintroduce them.
 - **`strict: true`.** No `any`, no `@ts-ignore`, no non-null assertions (`!`) — narrow explicitly instead.
 - **Node:** develop on v24.19.0. If `node -v` reports v22, the shell has not picked up nvm's default; use `~/.nvm/versions/node/v24.19.0/bin/node` explicitly.
@@ -86,10 +87,11 @@ Replaces CRA with Vite. Ends with a minimal but genuinely running app and all fi
   "dependencies": {
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "react-router-dom": "7.18.2"
+    "react-router": "8.3.0"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@types/node": "24.13.3",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
     "@vitejs/plugin-react": "6.0.5",
@@ -161,15 +163,20 @@ export default defineConfig({
     "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
-      "@cg/*": ["src/*"]
+      "@cg/*": ["./src/*"]
     },
-    "types": ["vite/client"]
+    "types": ["vite/client", "node"]
   },
   "include": ["src", "vite.config.ts"]
 }
 ```
+
+Three details here are load-bearing and were each verified against TypeScript 6.0.3 — do not "tidy" them:
+
+- **There is no `baseUrl`.** TS 6.0.3 rejects it outright: `TS5101: Option 'baseUrl' is deprecated and will stop functioning in TypeScript 7.0`. Silencing it with `"ignoreDeprecations": "6.0"` only defers the breakage to TS 7, so the option is dropped instead.
+- **Path targets therefore need the `./` prefix.** Without `baseUrl`, a bare `"src/*"` fails with `TS5090: Non-relative paths are not allowed when 'baseUrl' is not set`. With no `baseUrl`, `paths` resolve relative to this file's directory, so `"./src/*"` is correct.
+- **`"node"` is in `types`.** `vite.config.ts` imports `node:url`, which `vite/client` does not type; without it, `TS2591: Cannot find name 'node:url'`.
 
 - [ ] **Step 6: Create `src/vite-env.d.ts`**
 
@@ -1570,7 +1577,7 @@ Create `src/hooks/use-create-game.ts`:
 
 ```ts
 import { useReducer } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 
 import { NUMBER_OF_CARDS_PER_PLAYER } from '@cg/constants'
 import { saveGame } from '@cg/lib/storage'
@@ -2436,7 +2443,7 @@ export const Player = ({ player }: { player?: PlayerType }) => {
 `src/components/modal.tsx`:
 
 ```tsx
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 
 import { Blank } from '@cg/components/common/blank'
 import { Button } from '@cg/components/common/button'
@@ -2599,7 +2606,7 @@ export const Home = () => {
 `src/pages/game.tsx`:
 
 ```tsx
-import { Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router'
 
 import { Blank } from '@cg/components/common/blank'
 import { CommunityCards } from '@cg/components/community-cards'
@@ -2664,7 +2671,7 @@ export const Game = () => {
 - [ ] **Step 8: Replace `src/app.tsx`**
 
 ```tsx
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router'
 
 import { Game } from '@cg/pages/game'
 import { Home } from '@cg/pages/home'
@@ -2743,7 +2750,7 @@ Expected: `clean`.
 node -e "const p=require('./package.json'); const d=Object.keys(p.dependencies); console.log(d); if (d.length !== 3) { throw new Error('expected exactly 3 runtime deps, got ' + d.length) }"
 ```
 
-Expected: `[ 'react', 'react-dom', 'react-router-dom' ]`.
+Expected: `[ 'react', 'react-dom', 'react-router' ]`.
 
 - [ ] **Step 4: Confirm absolute imports are used throughout**
 
