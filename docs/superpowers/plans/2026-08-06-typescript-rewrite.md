@@ -1683,18 +1683,21 @@ Public prop APIs match the styled-components originals so call sites port unchan
 .dirCol { flex-direction: column; }
 .dirColRev { flex-direction: column-reverse; }
 
+/*
+ * The original ALIGN map fed all six values to all three properties, producing
+ * invalid declarations (align-items: space-between, justify-content: stretch) that
+ * browsers silently dropped. Only the valid combinations are kept here; the TypeScript
+ * unions below are narrowed to match, so a bad value is a compile error rather than a
+ * rule the browser ignores. No call site used the dropped combinations.
+ */
 .alignStart { align-items: flex-start; }
 .alignEnd { align-items: flex-end; }
 .alignCenter { align-items: center; }
-.alignBetween { align-items: space-between; }
-.alignAround { align-items: space-around; }
 .alignStretch { align-items: stretch; }
 
 .selfStart { align-self: flex-start; }
 .selfEnd { align-self: flex-end; }
 .selfCenter { align-self: center; }
-.selfBetween { align-self: space-between; }
-.selfAround { align-self: space-around; }
 .selfStretch { align-self: stretch; }
 
 .justifyStart { justify-content: flex-start; }
@@ -1702,7 +1705,6 @@ Public prop APIs match the styled-components originals so call sites port unchan
 .justifyCenter { justify-content: center; }
 .justifyBetween { justify-content: space-between; }
 .justifyAround { justify-content: space-around; }
-.justifyStretch { justify-content: stretch; }
 
 .wrapping { flex-wrap: wrap; }
 .clickable { cursor: pointer; }
@@ -1718,7 +1720,8 @@ import { cx } from '@cg/lib/utils'
 import styles from './wrap.module.css'
 
 export type Direction = 'row' | 'row-rev' | 'col' | 'col-rev'
-export type Align = 'start' | 'end' | 'center' | 'between' | 'around' | 'stretch'
+export type AlignItems = 'start' | 'end' | 'center' | 'stretch'
+export type JustifyContent = 'start' | 'end' | 'center' | 'between' | 'around'
 
 const DIRECTION: Record<Direction, string> = {
   'row': styles.dirRow,
@@ -1727,31 +1730,26 @@ const DIRECTION: Record<Direction, string> = {
   'col-rev': styles.dirColRev
 }
 
-const ALIGN_ITEMS: Record<Align, string> = {
+const ALIGN_ITEMS: Record<AlignItems, string> = {
   start: styles.alignStart,
   end: styles.alignEnd,
   center: styles.alignCenter,
-  between: styles.alignBetween,
-  around: styles.alignAround,
   stretch: styles.alignStretch
 }
 
-const ALIGN_SELF: Record<Align, string> = {
+const ALIGN_SELF: Record<AlignItems, string> = {
   start: styles.selfStart,
   end: styles.selfEnd,
   center: styles.selfCenter,
-  between: styles.selfBetween,
-  around: styles.selfAround,
   stretch: styles.selfStretch
 }
 
-const JUSTIFY: Record<Align, string> = {
+const JUSTIFY: Record<JustifyContent, string> = {
   start: styles.justifyStart,
   end: styles.justifyEnd,
   center: styles.justifyCenter,
   between: styles.justifyBetween,
-  around: styles.justifyAround,
-  stretch: styles.justifyStretch
+  around: styles.justifyAround
 }
 
 export const Wrap = ({
@@ -1768,9 +1766,9 @@ export const Wrap = ({
   children
 }: {
   direction?: Direction
-  align?: Align
-  alignSelf?: Align
-  justify?: Align
+  align?: AlignItems
+  alignSelf?: AlignItems
+  justify?: JustifyContent
   flex?: number
   order?: number
   wrap?: boolean
@@ -2064,7 +2062,16 @@ The original avoided optional chaining here so that non-clickable cards do not g
   margin-left: calc(var(--card-stick) - var(--card-w));
 }
 
-/* Won cards sit fully stacked on top of one another. */
+/*
+ * Won cards sit fully stacked on top of one another, in a box that is always exactly
+ * one card wide. The explicit width reproduces the original's `totalWidth={cardWidth}`:
+ * the pile keeps its full-size outline even while empty, which is how every player's
+ * table looks before the first trick is won. Do not replace this with fit-content.
+ */
+.stacked {
+  width: var(--card-w);
+}
+
 .stacked > * + * {
   margin-left: calc(-1 * var(--card-w));
 }
