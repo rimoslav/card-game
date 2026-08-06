@@ -1,0 +1,34 @@
+:root {
+  --color-primary: #daa520;
+  --color-secondary: #255adf;
+  --color-white: #fff;
+  --color-black: #000;
+  --color-silver: #c0c0c0;
+  --color-dark-slate-gray: #2f4f4f;
+  --color-name-tag: #2f4f4f1f;
+  --color-name-tag-lead: #2f4f4f66;
+  --color-green: #1e6b03;
+
+  --card-w: 75px;
+  --card-h: 104px;
+  --card-stick: 20px;
+}
+
+@media (min-width: 700px) and (max-width: 1199px) {
+  :root {
+    --card-w: 113px;
+    --card-h: 157px;
+    --card-stick: 30px;
+  }
+}
+
+@media (min-width: 1500px) {
+  :root {
+    --card-w: 113px;
+    --card-h: 157px;
+  }
+}
+
+body {
+  margin: 0;
+}
