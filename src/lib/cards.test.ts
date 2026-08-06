@@ -33,6 +33,17 @@ describe('token map', () => {
     expect(encodeCard('ZZ')).toBeUndefined()
     expect(decodeCard('nope!!')).toBeUndefined()
   })
+
+  // The lookup tables are consulted with untrusted values straight out of localStorage,
+  // so inherited Object.prototype keys must not resolve to anything.
+  it('returns undefined for Object.prototype property names', () => {
+    const inherited = ['constructor', 'toString', 'hasOwnProperty', 'valueOf', '__proto__']
+
+    inherited.forEach(name => {
+      expect(encodeCard(name)).toBeUndefined()
+      expect(decodeCard(name)).toBeUndefined()
+    })
+  })
 })
 
 describe('rankOf', () => {

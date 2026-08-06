@@ -35,8 +35,12 @@ const tokenFor = (code: string): string => {
   return (hash >>> 0).toString(36).padStart(7, '0').slice(-6)
 }
 
-const CODE_TO_TOKEN: Record<string, string> = {}
-const TOKEN_TO_CODE: Record<string, string> = {}
+// Object.create(null), not {} — these are looked up with untrusted input. A plain object
+// literal inherits from Object.prototype, so decodeCard('constructor') would return the
+// Object constructor instead of undefined, and Task 4's storage validation (which rejects
+// a token when decodeCard returns undefined) would accept it as a card code.
+const CODE_TO_TOKEN: Record<string, string> = Object.create(null)
+const TOKEN_TO_CODE: Record<string, string> = Object.create(null)
 
 ALL_CODES.forEach(code => {
   const token = tokenFor(code)
