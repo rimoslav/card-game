@@ -861,6 +861,60 @@ describe('clearGame', () => {
     expect(loadGame()).toBeNull()
   })
 })
+
+describe('saveGame rejects unencodable input', () => {
+  it('throws rather than writing a placeholder token', () => {
+    expect(() => saveGame({ playerCount: 2, hands: [['ZZ', ...handOf(0).slice(1)], handOf(10)] }))
+      .toThrow(/unknown card code/)
+  })
+
+  it('throws for a prototype property name posing as a code', () => {
+    expect(() => saveGame({ playerCount: 2, hands: [['constructor', ...handOf(0).slice(1)], handOf(10)] }))
+      .toThrow(/unknown card code/)
+  })
+})
+
+// Safari private mode and blocked-storage settings make localStorage throw on access.
+describe('an unavailable store', () => {
+  const throwingStore = (): Storage => ({
+    get length(): number {
+      throw new DOMException('denied', 'SecurityError')
+    },
+    clear: () => {
+      throw new DOMException('denied', 'SecurityError')
+    },
+    getItem: () => {
+      throw new DOMException('denied', 'SecurityError')
+    },
+    key: () => {
+      throw new DOMException('denied', 'SecurityError')
+    },
+    removeItem: () => {
+      throw new DOMException('denied', 'SecurityError')
+    },
+    setItem: () => {
+      throw new DOMException('denied', 'SecurityError')
+    }
+  })
+
+  it('makes loadGame return null instead of throwing', () => {
+    setStore(throwingStore())
+
+    expect(loadGame()).toBeNull()
+  })
+
+  it('makes clearGame a no-op instead of throwing', () => {
+    setStore(throwingStore())
+
+    expect(() => clearGame()).not.toThrow()
+  })
+
+  it('lets saveGame throw, so the caller can report the failure', () => {
+    setStore(throwingStore())
+
+    expect(() => saveGame({ playerCount: 2, hands: [handOf(0), handOf(10)] })).toThrow()
+  })
+})
 ```
 
 - [ ] **Step 2: Run the tests to verify they fail**
@@ -902,6 +956,17 @@ export const setStore = (store: Storage | null): void => {
 
 const getStore = (): Storage => injectedStore ?? window.localStorage
 
+// Reading localStorage can throw outright, not just return null — Safari private mode and
+// blocked-storage settings raise SecurityError on access, and quota limits raise on write.
+// A missing game is a normal state, so a throwing store is treated as "no game stored".
+const readRaw = (): string | null => {
+  try {
+    return getStore().getItem(KEY)
+  } catch {
+    return null
+  }
+}
+
 const isStoredPayload = (value: unknown): value is StoredPayload => {
   if (typeof value !== 'object' || value === null) {
     return false
@@ -915,17 +980,26 @@ const isStoredPayload = (value: unknown): value is StoredPayload => {
 }
 
 export const saveGame = (game: StoredGame): void => {
-  const payload: StoredPayload = {
-    v: VERSION,
-    p: game.playerCount,
-    h: game.hands.map(hand => hand.map(code => encodeCard(code) ?? ''))
-  }
+  // Throw rather than writing a placeholder for an unencodable code. Writing '' would
+  // produce a payload that loadGame later rejects, bouncing the player back to the home
+  // screen with no explanation; throwing lets the caller's catch surface a real message.
+  const h = game.hands.map(hand => hand.map(code => {
+    const token = encodeCard(code)
 
-  getStore().setItem(KEY, JSON.stringify(payload))
+    if (token === undefined) {
+      throw new Error(`Cannot save game: unknown card code ${JSON.stringify(code)}`)
+    }
+
+    return token
+  }))
+
+  // Deliberately not caught: if the store is unavailable, the caller must know the game
+  // was not saved rather than navigate to a game screen that cannot load.
+  getStore().setItem(KEY, JSON.stringify({ v: VERSION, p: game.playerCount, h } satisfies StoredPayload))
 }
 
 export const loadGame = (): StoredGame | null => {
-  const raw = getStore().getItem(KEY)
+  const raw = readRaw()
 
   if (raw === null) {
     return null
@@ -975,7 +1049,11 @@ export const loadGame = (): StoredGame | null => {
 }
 
 export const clearGame = (): void => {
-  getStore().removeItem(KEY)
+  try {
+    getStore().removeItem(KEY)
+  } catch {
+    // an unavailable store has nothing to clear
+  }
 }
 ```
 
