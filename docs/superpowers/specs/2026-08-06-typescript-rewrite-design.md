@@ -65,7 +65,10 @@ Revisit when `typescript-eslint` ships TS 7 support.
 
 ### Node
 
-Development targets Node 22 (`v22.14.0` local). `engines.node` is set to `>=20.19`.
+Development targets Node 24 (`v24.19.0`, npm 11.17.0). `engines.node` is set to
+`^20.19.0 || ^22.13.0 || >=24` — the intersection of the toolchain's own requirements
+(vite `^20.19.0 || >=22.12.0`, eslint `^20.19.0 || ^22.13.0 || >=24`,
+vitest `^20 || ^22 || >=24`).
 
 ---
 
@@ -403,12 +406,18 @@ added. Flagged as a small scope addition beyond a pure port.
 
 Vitest, logic-only — no DOM rendering, no jsdom.
 
-**`localStorage` in the node environment.** Verified: `globalThis.localStorage` is
-`undefined` under Node 22.14, so `storage.test.ts` cannot run in the default `node`
-environment unmodified. Rather than pull in jsdom for one API, `storage.ts` reads its
-backing store through a module-level `getStore(): Storage` indirection defaulting to
-`window.localStorage`, and the test installs a ~15-line in-memory `Storage` stub. This
-keeps the environment `node` and the suite dependency-free.
+**`localStorage` in the node environment.** Verified on Node 24.19.0:
+`globalThis.localStorage` is still `undefined` by default. Node's Web Storage
+implementation exists but requires `--experimental-webstorage` *and*
+`--localstorage-file=<path>` (omitting the path throws `ERR_INVALID_ARG_VALUE`), emits
+an `ExperimentalWarning`, and is **file-backed** — so state would persist across test
+runs and leak between cases. Upgrading Node further does not help.
+
+Therefore `storage.ts` reads its backing store through a module-level
+`getStore(): Storage` indirection defaulting to `window.localStorage`, and
+`storage.test.ts` installs a ~15-line in-memory `Storage` stub. This keeps the test
+environment `node`, needs no flags, adds no dependency, and gives each test a clean
+store.
 
 | File | Coverage |
 | --- | --- |
