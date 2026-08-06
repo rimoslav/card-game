@@ -19,6 +19,10 @@ export const replaceAt = <T>(index: number, value: T, xs: readonly T[]): T[] => 
 }
 
 export const chunk = <T>(size: number, xs: readonly T[]): T[][] => {
+  if (size <= 0) {
+    throw new RangeError(`chunk size must be greater than 0, got ${size}`)
+  }
+
   const result: T[][] = []
 
   for (let index = 0; index < xs.length; index += size) {

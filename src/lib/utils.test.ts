@@ -14,7 +14,10 @@ describe('range', () => {
 
 describe('replaceAt', () => {
   it('replaces the element at the index', () => {
-    expect(replaceAt(1, 'x', ['a', 'b', 'c'])).toEqual(['a', 'x', 'c'])
+    const original = ['a', 'b', 'c']
+    const result = replaceAt(1, 'x', original)
+    expect(result).toEqual(['a', 'x', 'c'])
+    expect(result).not.toBe(original)
   })
 
   it('does not mutate the input', () => {
@@ -42,6 +45,18 @@ describe('chunk', () => {
 
   it('returns empty for an empty input', () => {
     expect(chunk(3, [])).toEqual([])
+  })
+
+  it('throws on zero size', () => {
+    expect(() => chunk(0, [1, 2, 3])).toThrow(RangeError)
+  })
+
+  it('throws on negative size', () => {
+    expect(() => chunk(-1, [1, 2, 3])).toThrow(RangeError)
+  })
+
+  it('returns single chunk when size is larger than array', () => {
+    expect(chunk(10, [1, 2, 3])).toEqual([[1, 2, 3]])
   })
 })
 
