@@ -6,9 +6,12 @@
 }
 
 /*
- * content-box is deliberate: it reproduces the original styled-components sizing,
- * where the 3px border sat outside the declared width. Empty slots really are 6px
- * wider than filled ones — a quirk of the original, kept for a faithful port.
+ * content-box is deliberate: the 3px border sits outside the declared width, so each slot
+ * occupies exactly card-w + 6px and the row totals `players * (card-w + 6)` — the fixed
+ * width the original set on its container. Filled and empty slots are deliberately the
+ * SAME size: the original's `+6` on empty slots was absorbed by flex-shrink against that
+ * fixed width, so every slot rendered identically. Giving empty slots a wider rule here
+ * would make the community frame grow and shrink as the round fills.
  */
 .slot {
   box-sizing: content-box;
@@ -16,8 +19,4 @@
   height: var(--card-h);
   border: 3px solid var(--color-white);
   border-radius: 8px;
-}
-
-.empty {
-  width: calc(var(--card-w) + 6px);
 }

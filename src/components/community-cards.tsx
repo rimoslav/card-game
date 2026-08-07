@@ -1,6 +1,6 @@
 import { Card } from '@cg/components/card'
 import { usePlayGameContext } from '@cg/hooks/use-play-game'
-import { cx, range } from '@cg/lib/utils'
+import { range } from '@cg/lib/utils'
 
 import styles from './community-cards.module.css'
 
@@ -16,7 +16,7 @@ export const CommunityCards = () => {
         </div>
       ))}
       {emptySlots.map(slot => (
-        <div key={slot} className={cx(styles.slot, styles.empty)} />
+        <div key={slot} className={styles.slot} />
       ))}
     </div>
   )

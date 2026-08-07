@@ -6,6 +6,11 @@
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24"
   },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
