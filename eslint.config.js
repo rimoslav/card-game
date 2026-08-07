@@ -16,10 +16,12 @@ export default tseslint.config(
     plugins: { 'react-hooks': reactHooks },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // Every intra-project import is absolute from @cg/, with no exceptions —
+      // stylesheets included.
       'no-restricted-imports': ['error', {
         patterns: [{
-          group: ['./*', '../*', '!./*.module.css'],
-          message: 'Use @cg/ absolute imports (only ./*.module.css siblings are allowed).'
+          group: ['./*', '../*'],
+          message: 'Use @cg/ absolute imports. This project has no relative imports.'
         }]
       }]
     }

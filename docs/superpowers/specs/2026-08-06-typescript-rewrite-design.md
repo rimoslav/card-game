@@ -95,9 +95,21 @@ resolve: { alias: { '@cg': path.resolve(__dirname, 'src') } }
 ```
 
 Vitest reads `vite.config.ts`, so a single definition serves the editor, the build,
-and the test runner. All intra-project imports use `@cg/...`; relative imports are
-disallowed by an ESLint `no-restricted-imports` rule permitting only `./*.module.css`
-siblings.
+and the test runner. Every intra-project import uses `@cg/...` — stylesheets included — and an ESLint
+`no-restricted-imports` rule bans relative specifiers outright, with no exceptions.
+
+`src/vite-env.d.ts` declares the CSS module pattern under that prefix rather than relying
+on `vite/client`:
+
+```ts
+declare module '@cg/*.module.css' { … }
+declare module '@cg/styles/theme.css'
+```
+
+Vite's client types do declare `*.module.css`, but only reach the compiler when the editor
+resolves `vite/client` as the CLI does; editors running their own bundled TypeScript often
+do not, so the IDE reports "Cannot find module" while `npm run typecheck` passes. Declaring
+the prefixed pattern removes that dependency.
 
 ---
 

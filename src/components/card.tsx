@@ -1,7 +1,7 @@
 import { cx } from '@cg/lib/utils'
 import type { Card as CardType } from '@cg/types'
 
-import styles from './card.module.css'
+import styles from '@cg/components/card.module.css'
 
 export const Card = ({
   card,

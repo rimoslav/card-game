@@ -6,7 +6,7 @@ import { Text } from '@cg/components/common/text'
 import { NUMBER_OF_CARDS_PER_PLAYER } from '@cg/constants'
 import { usePlayGameContext } from '@cg/hooks/use-play-game'
 
-import styles from './modal.module.css'
+import styles from '@cg/components/modal.module.css'
 
 export const Modal = () => {
   const navigate = useNavigate()

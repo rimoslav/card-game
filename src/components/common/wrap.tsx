@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 
 import { cx } from '@cg/lib/utils'
 
-import styles from './wrap.module.css'
+import styles from '@cg/components/common/wrap.module.css'
 
 export type Direction = 'row' | 'row-rev' | 'col' | 'col-rev'
 export type AlignItems = 'start' | 'end' | 'center' | 'stretch'

@@ -2,7 +2,7 @@ import { Card } from '@cg/components/card'
 import { usePlayGameContext } from '@cg/hooks/use-play-game'
 import { range } from '@cg/lib/utils'
 
-import styles from './community-cards.module.css'
+import styles from '@cg/components/community-cards.module.css'
 
 export const CommunityCards = () => {
   const game = usePlayGameContext()

@@ -9,7 +9,7 @@ import { PlayGameContextProvider, usePlayGame } from '@cg/hooks/use-play-game'
 import { loadGame } from '@cg/lib/storage'
 import type { StoredGame } from '@cg/lib/storage'
 
-import styles from './game.module.css'
+import styles from '@cg/pages/game.module.css'
 
 const Board = ({ game: stored }: { game: StoredGame }) => {
   const game = usePlayGame({

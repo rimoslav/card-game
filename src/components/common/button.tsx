@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 
 import { COLOR_VARIABLE, type TextColor } from '@cg/components/common/text'
 
-import styles from './button.module.css'
+import styles from '@cg/components/common/button.module.css'
 
 export const Button = ({
   isDisabled = false,

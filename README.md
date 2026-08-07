@@ -19,8 +19,8 @@ Node `^20.19.0 || ^22.13.0 || >=24`.
 
 ## Conventions
 
-- Imports are absolute from `@cg/` (which maps to `src/`). The only relative imports
-  permitted are sibling `./*.module.css` files; ESLint enforces this.
+- Every import is absolute from `@cg/` (which maps to `src/`), stylesheets included.
+  There are no relative imports anywhere; ESLint enforces this.
 - Responsive behaviour is CSS media queries and custom properties only — there is no
   JS viewport measurement.
 - Tests are logic-only and run in Vitest's `node` environment.

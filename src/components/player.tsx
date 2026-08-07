@@ -5,7 +5,7 @@ import { USERS_POSITION } from '@cg/constants'
 import { usePlayGameContext } from '@cg/hooks/use-play-game'
 import type { Player as PlayerType } from '@cg/types'
 
-import styles from './player.module.css'
+import styles from '@cg/components/player.module.css'
 
 export const Player = ({ player }: { player?: PlayerType }) => {
   const game = usePlayGameContext()

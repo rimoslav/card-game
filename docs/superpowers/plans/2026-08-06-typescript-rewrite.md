@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - **Code style — match the existing codebase:** no semicolons, single quotes, 2-space indent, arrow-function components. Every code block in this plan already follows it.
-- **Absolute imports only.** All intra-project imports use `@cg/...`. The single exception is a sibling `./x.module.css`, which CSS Modules require. An ESLint rule enforces this.
+- **Absolute imports only, with no exceptions.** Every intra-project import uses `@cg/...` — stylesheets included. An ESLint rule enforces it, and `src/vite-env.d.ts` declares the `@cg/`-prefixed CSS module pattern so editors resolve it without depending on how they happen to resolve `vite/client`.
 - **Exact versions, pinned (no `^`):** react 19.2.8, react-dom 19.2.8, react-router 8.3.0, vite 8.2.1, @vitejs/plugin-react 6.0.5, typescript 6.0.3, vitest 4.1.10, eslint 10.8.0, typescript-eslint 8.66.0, @eslint/js 10.0.1, eslint-plugin-react-hooks 7.1.1, globals 17.9.0, @types/node 24.13.3, @types/react 19.2.18, @types/react-dom 19.2.4.
 - **TypeScript is 6.0.3, NOT 7.x.** TS 7 exists but `typescript-eslint@8.66.0` requires `>=4.8.4 <6.1.0`. Installing TS 7 breaks linting entirely. Do not "helpfully" upgrade it.
 - **Runtime dependencies are exactly three:** `react`, `react-dom`, `react-router`. Adding any other `dependencies` entry defeats the purpose of this rewrite. Everything else is a `devDependency`.
@@ -199,7 +199,23 @@ Three details here are load-bearing and were each verified against TypeScript 6.
 /// <reference types="vite/client" />
 ```
 
-This is what gives `*.module.css` imports and `import.meta.env` their types.
+This gives `import.meta.env` its types. It also declares the CSS module pattern
+explicitly rather than relying on `vite/client`:
+
+```ts
+declare module '@cg/*.module.css' {
+  const classes: { readonly [key: string]: string }
+  export default classes
+}
+
+declare module '@cg/styles/theme.css'
+```
+
+Vite's own client types already cover `*.module.css`, but that only reaches the compiler
+if the editor resolves `vite/client` the way the CLI does — editors running their own
+bundled TypeScript often do not, which surfaces as "Cannot find module" in the IDE while
+`npm run typecheck` passes. The `@cg/`-prefixed pattern is more specific, so it wins the
+match without conflicting.
 
 - [ ] **Step 7: Create `eslint.config.js`**
 
@@ -224,8 +240,8 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'no-restricted-imports': ['error', {
         patterns: [{
-          group: ['./*', '../*', '!./*.module.css'],
-          message: 'Use @cg/ absolute imports (only ./*.module.css siblings are allowed).'
+          group: ['./*', '../*'],
+          message: 'Use @cg/ absolute imports. This project has no relative imports.'
         }]
       }]
     }
@@ -1944,7 +1960,7 @@ import type { CSSProperties, ReactNode } from 'react'
 
 import { cx } from '@cg/lib/utils'
 
-import styles from './wrap.module.css'
+import styles from '@cg/components/common/wrap.module.css'
 
 export type Direction = 'row' | 'row-rev' | 'col' | 'col-rev'
 export type AlignItems = 'start' | 'end' | 'center' | 'stretch'
@@ -2043,7 +2059,7 @@ export const Wrap = ({
 ```tsx
 import type { CSSProperties, ReactNode } from 'react'
 
-import styles from './text.module.css'
+import styles from '@cg/components/common/text.module.css'
 
 export type TextColor =
   | 'primary'
@@ -2130,7 +2146,7 @@ import type { CSSProperties, ReactNode } from 'react'
 
 import { COLOR_VARIABLE, type TextColor } from '@cg/components/common/text'
 
-import styles from './button.module.css'
+import styles from '@cg/components/common/button.module.css'
 
 export const Button = ({
   isDisabled = false,
@@ -2238,7 +2254,7 @@ Where `with-window-size` actually dies. Card sizing and overlap become CSS entir
 import { cx } from '@cg/lib/utils'
 import type { Card as CardType } from '@cg/types'
 
-import styles from './card.module.css'
+import styles from '@cg/components/card.module.css'
 
 export const Card = ({
   card,
@@ -2318,7 +2334,7 @@ import { Card } from '@cg/components/card'
 import { cx } from '@cg/lib/utils'
 import type { Card as CardType } from '@cg/types'
 
-import styles from './players-cards.module.css'
+import styles from '@cg/components/players-cards.module.css'
 
 export const PlayersCards = ({
   cards,
@@ -2380,7 +2396,7 @@ import { Card } from '@cg/components/card'
 import { usePlayGameContext } from '@cg/hooks/use-play-game'
 import { range } from '@cg/lib/utils'
 
-import styles from './community-cards.module.css'
+import styles from '@cg/components/community-cards.module.css'
 
 export const CommunityCards = () => {
   const game = usePlayGameContext()
@@ -2470,7 +2486,7 @@ Brings the app back to life end to end.
 ```tsx
 import type { ReactNode } from 'react'
 
-import styles from './playing-table.module.css'
+import styles from '@cg/components/playing-table.module.css'
 
 export const PlayingTable = ({
   hasManyPlayers = false,
@@ -2511,7 +2527,7 @@ import { Text } from '@cg/components/common/text'
 import { cx } from '@cg/lib/utils'
 import type { Player } from '@cg/types'
 
-import styles from './name-and-points.module.css'
+import styles from '@cg/components/name-and-points.module.css'
 
 export const NameAndPoints = ({
   player,
@@ -2568,7 +2584,7 @@ import { USERS_POSITION } from '@cg/constants'
 import { usePlayGameContext } from '@cg/hooks/use-play-game'
 import type { Player as PlayerType } from '@cg/types'
 
-import styles from './player.module.css'
+import styles from '@cg/components/player.module.css'
 
 export const Player = ({ player }: { player?: PlayerType }) => {
   const game = usePlayGameContext()
@@ -2674,7 +2690,7 @@ import { Text } from '@cg/components/common/text'
 import { NUMBER_OF_CARDS_PER_PLAYER } from '@cg/constants'
 import { usePlayGameContext } from '@cg/hooks/use-play-game'
 
-import styles from './modal.module.css'
+import styles from '@cg/components/modal.module.css'
 
 export const Modal = () => {
   const navigate = useNavigate()
@@ -2840,7 +2856,7 @@ import { PlayGameContextProvider, usePlayGame } from '@cg/hooks/use-play-game'
 import { loadGame } from '@cg/lib/storage'
 import type { StoredGame } from '@cg/lib/storage'
 
-import styles from './game.module.css'
+import styles from '@cg/pages/game.module.css'
 
 const Board = ({ game: stored }: { game: StoredGame }) => {
   const game = usePlayGame({
@@ -3059,11 +3075,11 @@ Expected: `[ 'react', 'react-dom', 'react-router' ]`.
 - [ ] **Step 4: Confirm absolute imports are used throughout**
 
 ```bash
-grep -rnE "from '\.\./" src/ || echo "no parent-relative imports"
-grep -rnE "from '\./" src/ | grep -v '\.module\.css' || echo "no sibling imports outside CSS modules"
+grep -rnE "from '\.\.?/" src/ || echo "no relative imports"
 ```
 
-Expected: both fallback messages.
+Expected: `no relative imports`. There are no exceptions — stylesheets are imported
+absolutely too.
 
 - [ ] **Step 5: Run the full verification suite**
 

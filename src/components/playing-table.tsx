@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import styles from './playing-table.module.css'
+import styles from '@cg/components/playing-table.module.css'
 
 export const PlayingTable = ({
   hasManyPlayers = false,

@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 
-import styles from './text.module.css'
+import styles from '@cg/components/common/text.module.css'
 
 export type TextColor =
   | 'primary'
