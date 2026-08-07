@@ -75,6 +75,11 @@ Replaces CRA with Vite. Ends with a minimal but genuinely running app and all fi
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24"
   },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
@@ -137,9 +142,19 @@ export default defineConfig({
       '@cg': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  build: {
+    // Without an explicit target the CSS ships modern media-query range syntax
+    // (`@media (width>=700px)`), which needs roughly Safari 16.4+. The app it replaces
+    // declared a far wider browserslist, and an unparseable media feature drops the whole
+    // rule — an older browser would silently get the mobile layout at every width.
+    target: ['chrome87', 'edge88', 'firefox78', 'safari14'],
+    cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14']
+  },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts']
+    // ?(x) matters: with a bare *.test.ts a file named *.test.tsx is silently never run,
+    // and the suite still reports green.
+    include: ['src/**/*.test.ts?(x)']
   }
 })
 ```
@@ -2254,10 +2269,18 @@ The original avoided optional chaining here so that non-clickable cards do not g
 - [ ] **Step 3: Create `src/components/players-cards.module.css`**
 
 ```css
+/*
+ * The width is fixed at a FULL hand, not fit-content. The original compensated for the
+ * shrinking hand with a spacer of `10 + (10 - n) * cardStickingOutPx`, so hand + spacer +
+ * pile summed to a constant `2*card-w + 10 + 9*card-stick` and nothing moved all game.
+ * With fit-content the row would shrink by one --card-stick per card played — 270px over
+ * a game at the 700-1199px band — sliding every player's cards right and their won pile
+ * left on each turn. A fixed width restores the original's constant geometry.
+ */
 .hand {
   position: relative;
   display: flex;
-  width: fit-content;
+  width: calc(var(--card-w) + 9 * var(--card-stick));
   height: var(--card-h);
   border-radius: 8px;
 }
@@ -2334,9 +2357,12 @@ export const PlayersCards = ({
 }
 
 /*
- * content-box is deliberate: it reproduces the original styled-components sizing,
- * where the 3px border sat outside the declared width. Empty slots really are 6px
- * wider than filled ones — a quirk of the original, kept for a faithful port.
+ * content-box is deliberate: the 3px border sits outside the declared width, so each slot
+ * occupies exactly card-w + 6px and the row totals `players * (card-w + 6)` — the fixed
+ * width the original set on its container. Filled and empty slots are deliberately the
+ * SAME size: the original's `+6` on empty slots was absorbed by flex-shrink against that
+ * fixed width, so every slot rendered identically. Giving empty slots a wider rule here
+ * would make the community frame grow and shrink as the round fills.
  */
 .slot {
   box-sizing: content-box;
@@ -2345,10 +2371,6 @@ export const PlayersCards = ({
   border: 3px solid var(--color-white);
   border-radius: 8px;
 }
-
-.empty {
-  width: calc(var(--card-w) + 6px);
-}
 ```
 
 - [ ] **Step 6: Create `src/components/community-cards.tsx`**
@@ -2356,7 +2378,7 @@ export const PlayersCards = ({
 ```tsx
 import { Card } from '@cg/components/card'
 import { usePlayGameContext } from '@cg/hooks/use-play-game'
-import { cx, range } from '@cg/lib/utils'
+import { range } from '@cg/lib/utils'
 
 import styles from './community-cards.module.css'
 
@@ -2372,7 +2394,7 @@ export const CommunityCards = () => {
         </div>
       ))}
       {emptySlots.map(slot => (
-        <div key={slot} className={cx(styles.slot, styles.empty)} />
+        <div key={slot} className={styles.slot} />
       ))}
     </div>
   )
