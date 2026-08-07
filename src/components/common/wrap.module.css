@@ -1,0 +1,37 @@
+.wrap {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+.dirRow { flex-direction: row; }
+.dirRowRev { flex-direction: row-reverse; }
+.dirCol { flex-direction: column; }
+.dirColRev { flex-direction: column-reverse; }
+
+/*
+ * The original ALIGN map fed all six values to all three properties, producing
+ * invalid declarations (align-items: space-between, justify-content: stretch) that
+ * browsers silently dropped. Only the valid combinations are kept here; the TypeScript
+ * unions below are narrowed to match, so a bad value is a compile error rather than a
+ * rule the browser ignores. No call site used the dropped combinations.
+ */
+.alignStart { align-items: flex-start; }
+.alignEnd { align-items: flex-end; }
+.alignCenter { align-items: center; }
+.alignStretch { align-items: stretch; }
+
+.selfStart { align-self: flex-start; }
+.selfEnd { align-self: flex-end; }
+.selfCenter { align-self: center; }
+.selfStretch { align-self: stretch; }
+
+.justifyStart { justify-content: flex-start; }
+.justifyEnd { justify-content: flex-end; }
+.justifyCenter { justify-content: center; }
+.justifyBetween { justify-content: space-between; }
+.justifyAround { justify-content: space-around; }
+
+.wrapping { flex-wrap: wrap; }
+.clickable { cursor: pointer; }
