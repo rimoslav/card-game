@@ -36,6 +36,13 @@ export const drawCards = async (deckId: string, count: number): Promise<string[]
     throw new Error('Deck response did not contain a cards array')
   }
 
+  // A short draw must fail here. Downstream, chunk() would silently produce a final
+  // hand with fewer than ten cards, saveGame would accept it, and loadGame would then
+  // reject the whole payload — bouncing the player home with no explanation.
+  if (drawn.cards.length !== count) {
+    throw new Error(`Deck response returned ${drawn.cards.length} cards, expected ${count}`)
+  }
+
   return drawn.cards.map(card => {
     if (!hasCode(card)) {
       throw new Error('Deck response contained a card without a code')

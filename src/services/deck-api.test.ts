@@ -49,7 +49,7 @@ describe('drawCards', () => {
   })
 
   it('requests the requested count from the given deck', async () => {
-    const fetchMock = mockFetch({ cards: [] })
+    const fetchMock = mockFetch({ cards: Array.from({ length: 40 }, () => ({ code: 'AS' })) })
 
     await drawCards('abc123', 40)
 
@@ -79,6 +79,12 @@ describe('malformed responses', () => {
     mockFetch({})
 
     await expect(drawCards('abc123', 2)).rejects.toThrow('Deck response did not contain a cards array')
+  })
+
+  it('rejects a draw that returned fewer cards than requested', async () => {
+    mockFetch({ cards: [{ code: 'AD' }, { code: '7S' }] })
+
+    await expect(drawCards('abc123', 40)).rejects.toThrow('returned 2 cards, expected 40')
   })
 
   it('rejects a draw response containing a card without a code', async () => {
