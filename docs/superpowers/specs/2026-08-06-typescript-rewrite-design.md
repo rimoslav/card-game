@@ -429,8 +429,17 @@ store.
 | `lib/utils.test.ts` | `range`, `replaceAt` (immutability), `chunk` |
 | `hooks/use-play-game.test.ts` | discard moves a card to community and advances the active player; the pot goes to the highest rank; ties go to the later player; **property test** — over seeded randomized games at 2/3/4 players, `gameLeads` always equals the true max-score set |
 
+| `pages/pages.test.ts` | render smoke test — Home shows the prompt and all three player-count buttons; a dealt four-player game renders player names, scores, opponent card backs and the user's face-up cards; the Ace of Diamonds resolves to its local image; `/game` with nothing stored does not render the table |
+
 The property test is a direct port of the harness that refuted §8.3, so that
 investigation becomes a permanent regression guard.
+
+**On the render smoke test.** Logic-only testing leaves one structural blind spot: a
+component that throws on render, a missing export, or a broken context would pass every
+other test and fail only in a browser. `react-dom/server` renders a tree to a string with
+no DOM at all, and `react-dom` is already a runtime dependency — so this is covered
+without jsdom, honouring the constraint's actual purpose rather than only its letter. It
+does not run effects, so it complements rather than replaces manual verification.
 
 ---
 
