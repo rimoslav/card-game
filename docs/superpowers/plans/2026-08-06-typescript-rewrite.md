@@ -1396,6 +1396,13 @@ describe('HANDLE_ROUND_COMPLETED', () => {
     expect(next.players[1].score).toBe(25)
     expect(next.players[0].score).toBe(0)
   })
+
+  // Reachable if the settling effect ever fires before a round has been played — which
+  // StrictMode's double mount-invoke provoked when this was gated on a mount flag.
+  it('states the invariant when the community is empty', () => {
+    expect(() => playGameReducer(stateWith(4), { type: 'HANDLE_ROUND_COMPLETED', payload: 4 }))
+      .toThrow('HANDLE_ROUND_COMPLETED dispatched with an empty community')
+  })
 })
 
 // Ported from the harness that investigated spec section 8.3. It refuted the suspected
@@ -1480,8 +1487,7 @@ import {
   createContext,
   useContext,
   useEffect,
-  useReducer,
-  useRef
+  useReducer
 } from 'react'
 import type { ReactNode } from 'react'
 
@@ -1531,6 +1537,13 @@ export const playGameReducer = (state: GameState, action: GameAction): GameState
     }
     case 'HANDLE_ROUND_COMPLETED': {
       const numberOfPlayers = action.payload
+
+      // Only ever dispatched once a full round has been played. State the invariant
+      // rather than reading community[0] of an empty pile, which fails with an opaque
+      // "Cannot read properties of undefined (reading 'rank')".
+      if (state.community.length === 0) {
+        throw new Error('HANDLE_ROUND_COMPLETED dispatched with an empty community')
+      }
 
       let communitySum = state.community[0].rank
       let roundWinnerId = 0
@@ -1606,8 +1619,6 @@ export const usePlayGame = ({
     players: buildPlayers(initialHands)
   }))
 
-  const didMountRef = useRef(false)
-
   const discardACard = (cardObj: Card): void => {
     dispatch({
       type: 'CARD_DISCARDED',
@@ -1631,14 +1642,16 @@ export const usePlayGame = ({
       return () => clearTimeout(timer)
     }
 
-    if (!didMountRef.current) {
-      // first render — the game is just starting, nothing to settle yet
-      didMountRef.current = true
-
+    // Back round to the user — settle the round before they may play again. Gate on the
+    // community actually holding cards rather than on a "have I mounted yet" ref: an
+    // empty pile means the game has only just started. A mount flag cannot express this
+    // safely, because StrictMode invokes the effect twice on mount and the flag's branch
+    // has no cleanup to undo, so the second invocation would fall through and settle a
+    // round that was never played.
+    if (state.community.length === 0) {
       return
     }
 
-    // back round to the user: settle the round before they may play again
     const timer = setTimeout(() => {
       dispatch({ type: 'HANDLE_ROUND_COMPLETED', payload: playerCount })
     }, TIME_BETWEEN_PLAYS_MS)
