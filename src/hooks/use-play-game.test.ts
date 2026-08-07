@@ -101,6 +101,13 @@ describe('HANDLE_ROUND_COMPLETED', () => {
     expect(next.players[1].score).toBe(25)
     expect(next.players[0].score).toBe(0)
   })
+
+  // Reachable if the settling effect ever fires before a round has been played — which
+  // StrictMode's double mount-invoke provoked when this was gated on a mount flag.
+  it('states the invariant when the community is empty', () => {
+    expect(() => playGameReducer(stateWith(4), { type: 'HANDLE_ROUND_COMPLETED', payload: 4 }))
+      .toThrow('HANDLE_ROUND_COMPLETED dispatched with an empty community')
+  })
 })
 
 // Ported from the harness that investigated spec section 8.3. It refuted the suspected
