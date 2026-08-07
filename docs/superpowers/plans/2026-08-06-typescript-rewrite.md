@@ -2390,10 +2390,13 @@ npm run typecheck && npm run lint
 Expected: both exit 0. Confirm nothing references the deleted hook:
 
 ```bash
-grep -rn "with-window-size\|withWindowSize\|mapSizesToProps" src/ || echo "clean"
+grep -rn "with-window-size\|withWindowSize\|mapSizesToProps" src/
 ```
 
-Expected: `clean`.
+Expected: matches ONLY in `src/components/player.js` and `src/pages/game.js`. Those two
+legacy files are ported and deleted in Task 10, which is what finally empties this grep —
+Task 11 Step 1 re-runs it as the closing gate. A match in any other file means something
+was missed here; report it rather than deleting extra files.
 
 - [ ] **Step 8: Commit**
 
