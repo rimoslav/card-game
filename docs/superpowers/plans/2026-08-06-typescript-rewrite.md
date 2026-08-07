@@ -1607,9 +1607,6 @@ export const usePlayGame = ({
   }))
 
   const didMountRef = useRef(false)
-  const stateRef = useRef(state)
-
-  stateRef.current = state
 
   const discardACard = (cardObj: Card): void => {
     dispatch({
@@ -1620,7 +1617,10 @@ export const usePlayGame = ({
 
   useEffect(() => {
     if (state.activePlayerId !== USERS_POSITION) {
-      const active = stateRef.current.players[state.activePlayerId]
+      // Read state directly, not through a ref. The effect closure captures this render's
+      // state, which is current at the moment the effect runs, so a ref adds nothing — and
+      // writing one during render is what eslint-plugin-react-hooks' `refs` rule forbids.
+      const active = state.players[state.activePlayerId]
       const cardIndex = Math.floor(Math.random() * active.remainingCards.length)
       const chosen = active.remainingCards[cardIndex]
 
