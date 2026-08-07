@@ -1,17 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react'
 
-import type { TextColor } from '@cg/components/common/text'
+import { COLOR_VARIABLE, type TextColor } from '@cg/components/common/text'
 
 import styles from './button.module.css'
-
-const COLOR_VARIABLE: Record<TextColor, string> = {
-  primary: 'var(--color-primary)',
-  secondary: 'var(--color-secondary)',
-  white: 'var(--color-white)',
-  black: 'var(--color-black)',
-  silver: 'var(--color-silver)',
-  darkSlateGray: 'var(--color-dark-slate-gray)'
-}
 
 export const Button = ({
   isDisabled = false,

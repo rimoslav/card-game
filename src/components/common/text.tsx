@@ -10,7 +10,9 @@ export type TextColor =
   | 'silver'
   | 'darkSlateGray'
 
-const COLOR_VARIABLE: Record<TextColor, string> = {
+// Exported so button.tsx shares one definition — a second copy is a second place to
+// update whenever a colour is added or renamed.
+export const COLOR_VARIABLE: Record<TextColor, string> = {
   primary: 'var(--color-primary)',
   secondary: 'var(--color-secondary)',
   white: 'var(--color-white)',
