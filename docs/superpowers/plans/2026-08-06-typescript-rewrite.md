@@ -1144,7 +1144,7 @@ describe('drawCards', () => {
   })
 
   it('requests the requested count from the given deck', async () => {
-    const fetchMock = mockFetch({ cards: [] })
+    const fetchMock = mockFetch({ cards: Array.from({ length: 40 }, () => ({ code: 'AS' })) })
 
     await drawCards('abc123', 40)
 
@@ -1174,6 +1174,12 @@ describe('malformed responses', () => {
     mockFetch({})
 
     await expect(drawCards('abc123', 2)).rejects.toThrow('Deck response did not contain a cards array')
+  })
+
+  it('rejects a draw that returned fewer cards than requested', async () => {
+    mockFetch({ cards: [{ code: 'AD' }, { code: '7S' }] })
+
+    await expect(drawCards('abc123', 40)).rejects.toThrow('returned 2 cards, expected 40')
   })
 
   it('rejects a draw response containing a card without a code', async () => {
@@ -1239,6 +1245,13 @@ export const drawCards = async (deckId: string, count: number): Promise<string[]
 
   if (!Array.isArray(drawn.cards)) {
     throw new Error('Deck response did not contain a cards array')
+  }
+
+  // A short draw must fail here. Downstream, chunk() would silently produce a final
+  // hand with fewer than ten cards, saveGame would accept it, and loadGame would then
+  // reject the whole payload — bouncing the player home with no explanation.
+  if (drawn.cards.length !== count) {
+    throw new Error(`Deck response returned ${drawn.cards.length} cards, expected ${count}`)
   }
 
   return drawn.cards.map(card => {
@@ -1732,7 +1745,7 @@ This carries approved fix §8.4: a failed deck request now reports an error inst
 Create `src/hooks/use-create-game.ts`:
 
 ```ts
-import { useReducer } from 'react'
+import { useEffect, useReducer, useRef } from 'react'
 import { useNavigate } from 'react-router'
 
 import { NUMBER_OF_CARDS_PER_PLAYER } from '@cg/constants'
@@ -1775,7 +1788,29 @@ export const useCreateNewGame = () => {
   const [state, dispatch] = useReducer(createNewGameReducer, initialState)
   const navigate = useNavigate()
 
+  // A second click can land before the dispatch above has re-rendered the buttons as
+  // disabled — state updates are not synchronous, so the UI alone cannot prevent a
+  // double start. This ref closes that window.
+  const isStartingRef = useRef(false)
+  const isMountedRef = useRef(true)
+
+  useEffect(() => {
+    // Assign on setup, not just on cleanup. StrictMode runs setup, cleanup, then setup
+    // again on mount; without this line the cleanup would leave the flag false forever
+    // and every navigation would be silently skipped.
+    isMountedRef.current = true
+
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   const startNewGame = async (playerCount: number): Promise<void> => {
+    if (isStartingRef.current) {
+      return
+    }
+
+    isStartingRef.current = true
     dispatch({ type: 'REQUEST' })
 
     try {
@@ -1787,9 +1822,18 @@ export const useCreateNewGame = () => {
         hands: chunk(NUMBER_OF_CARDS_PER_PLAYER, codes)
       })
 
-      navigate('/game')
-    } catch {
+      // Navigation is router-level, not component-level, so an in-flight request could
+      // otherwise yank a user who has already left this screen over to /game.
+      if (isMountedRef.current) {
+        navigate('/game')
+      }
+    } catch (error) {
+      // The player sees one generic line, but swallowing the cause entirely would leave
+      // nothing to diagnose a failed deal with.
+      console.error('Failed to start a new game', error)
       dispatch({ type: 'ERROR', payload: 'Could not deal a new game. Please try again.' })
+    } finally {
+      isStartingRef.current = false
     }
   }
 
