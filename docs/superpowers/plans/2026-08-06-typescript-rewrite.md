@@ -1873,7 +1873,12 @@ git commit -m "feat: deal games into localStorage and surface deck errors"
   - `Button` — props `isDisabled`, `textColor`, `color`, `onClick`, `children`
   - `Blank` — props `width`, `height`
 
-Public prop APIs match the styled-components originals so call sites port unchanged.
+Public prop APIs match the styled-components originals so call sites port unchanged, with
+one deliberate exception: `Wrap`'s `wrap` prop becomes a boolean. The original took a raw
+string fed straight to `flex-wrap`, and the only call site passed `wrap="wrap"`. Nothing
+used `wrap-reverse`, so the boolean carries the same meaning with a narrower type — the
+same reasoning as the `align`/`justify` narrowing above. Task 10's Home passes it as the
+boolean shorthand `wrap`.
 
 - [ ] **Step 1: Create `src/components/common/wrap.module.css`**
 
@@ -2033,7 +2038,9 @@ export type TextColor =
   | 'silver'
   | 'darkSlateGray'
 
-const COLOR_VARIABLE: Record<TextColor, string> = {
+// Exported so button.tsx shares one definition — a second copy is a second place to
+// update whenever a colour is added or renamed.
+export const COLOR_VARIABLE: Record<TextColor, string> = {
   primary: 'var(--color-primary)',
   secondary: 'var(--color-secondary)',
   white: 'var(--color-white)',
@@ -2106,18 +2113,9 @@ export const Text = ({
 ```tsx
 import type { CSSProperties, ReactNode } from 'react'
 
-import type { TextColor } from '@cg/components/common/text'
+import { COLOR_VARIABLE, type TextColor } from '@cg/components/common/text'
 
 import styles from './button.module.css'
-
-const COLOR_VARIABLE: Record<TextColor, string> = {
-  primary: 'var(--color-primary)',
-  secondary: 'var(--color-secondary)',
-  white: 'var(--color-white)',
-  black: 'var(--color-black)',
-  silver: 'var(--color-silver)',
-  darkSlateGray: 'var(--color-dark-slate-gray)'
-}
 
 export const Button = ({
   isDisabled = false,
