@@ -1,0 +1,23 @@
+.community {
+  position: relative;
+  display: flex;
+  width: fit-content;
+  height: var(--card-h);
+}
+
+/*
+ * content-box is deliberate: it reproduces the original styled-components sizing,
+ * where the 3px border sat outside the declared width. Empty slots really are 6px
+ * wider than filled ones — a quirk of the original, kept for a faithful port.
+ */
+.slot {
+  box-sizing: content-box;
+  width: var(--card-w);
+  height: var(--card-h);
+  border: 3px solid var(--color-white);
+  border-radius: 8px;
+}
+
+.empty {
+  width: calc(var(--card-w) + 6px);
+}

@@ -1,0 +1,30 @@
+.hand {
+  position: relative;
+  display: flex;
+  width: fit-content;
+  height: var(--card-h);
+  border-radius: 8px;
+}
+
+/* Overlap: each card after the first slides back so only --card-stick shows. */
+.hand > * + * {
+  margin-left: calc(var(--card-stick) - var(--card-w));
+}
+
+/*
+ * Won cards sit fully stacked on top of one another, in a box that is always exactly
+ * one card wide. The explicit width reproduces the original's `totalWidth={cardWidth}`:
+ * the pile keeps its full-size outline even while empty, which is how every player's
+ * table looks before the first trick is won. Do not replace this with fit-content.
+ */
+.stacked {
+  width: var(--card-w);
+}
+
+.stacked > * + * {
+  margin-left: calc(-1 * var(--card-w));
+}
+
+.bordered {
+  border: 2px solid var(--color-white);
+}
