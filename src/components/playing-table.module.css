@@ -1,0 +1,16 @@
+.table {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: var(--color-green);
+  border: 10px solid var(--color-primary);
+  padding: 20px;
+}
+
+@media (min-width: 1200px) {
+  .table[data-many-players='true'] {
+    align-items: stretch;
+  }
+}

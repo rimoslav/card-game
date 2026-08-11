@@ -1,0 +1,47 @@
+.board {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1400px;
+}
+
+.colA,
+.colC {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.colB {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.colA { order: 2; }
+.colB { order: 1; }
+.colC { order: 3; }
+
+/* Replaces isLargeScreen (ww >= 1200) from mapSizesToProps. */
+@media (min-width: 1200px) {
+  .board {
+    flex-direction: column-reverse;
+  }
+
+  .colA { order: 1; }
+  .colB { order: 2; }
+
+  .spacer { display: none; }
+
+  .board[data-many-players='true'] {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .board[data-many-players='true'] .colA {
+    flex-direction: column-reverse;
+  }
+}

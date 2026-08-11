@@ -1,0 +1,12 @@
+.nameTag {
+  display: flex;
+  justify-content: space-between;
+  align-self: stretch;
+  background: var(--color-name-tag);
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.leading {
+  background: var(--color-name-tag-lead);
+}

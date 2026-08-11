@@ -1,0 +1,22 @@
+.player {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.hands {
+  display: flex;
+}
+
+.wonCards {
+  margin-left: 10px;
+}
+
+/* Replaces shouldShowWonCards (ww >= 400) from mapSizesToProps. */
+@media (max-width: 399px) {
+  .wonCards {
+    display: none;
+  }
+}

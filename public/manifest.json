@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Card Game",
+  "name": "Card Game",
   "icons": [
     {
       "src": "ace-of-spades.png",
