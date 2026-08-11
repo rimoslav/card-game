@@ -25,7 +25,7 @@ This overhaul keeps what works and fixes what the table fails to say.
 
 - No change to game rules, scoring, or the reducer's decision logic.
 - No layout re-architecture — the responsive matrix stays as verified.
-- No new runtime dependency. Runtime dependencies remain exactly `react`, `react-dom`, `react-router`.
+- No new runtime dependency, and no new asset bytes. Runtime dependencies remain exactly `react`, `react-dom`, `react-router`.
 - No webfont.
 
 ---
@@ -159,25 +159,35 @@ A small `Round 4 / 10` indicator above the table, from `roundNumber` and `NUMBER
 
 ## 6. Sound
 
-Three cues, played through a small `src/lib/sound.ts`:
+Three cues, **synthesized at runtime with WebAudio** — no audio files, no bytes added to the
+bundle, nothing to source or license.
 
-| File | When | Target length |
+| Cue | When | Synthesis |
 | --- | --- | --- |
-| `public/sounds/deal.wav` | a new game is dealt | ≤ 700ms |
-| `public/sounds/play.wav` | any card is played | ≤ 200ms |
-| `public/sounds/win.wav` | a round is won | ≤ 900ms |
+| `deal` | a new game is dealt | four short filtered noise bursts ~45ms apart — a riffle |
+| `play` | any card is played | one filtered noise burst, ~90ms, fast decay — card on felt |
+| `win` | a round is won | two sine tones, 660 Hz then 880 Hz, ~260ms total |
 
-WAV rather than MP3 so the placeholder files can be generated directly from raw PCM with
-no encoder. The three paths are declared in one array in `sound.ts`, so swapping to `.mp3`
-or `.ogg` later is a one-line change — every browser this targets plays all three.
+Noise is a small `AudioBuffer` of random samples through a lowpass `BiquadFilter` (~2 kHz)
+and a `GainNode` envelope; tones are an `OscillatorNode` through the same envelope shape.
+A felt tap is essentially filtered noise with a fast decay, which is why this reads as
+convincing rather than synthetic. Master gain sits low (0.25) so cues stay under the UI
+rather than over it. Nodes are stopped and disconnected after each cue.
 
-**Muted by default**, with a toggle pinned to the top-right of the table surface on **both** routes — the deal cue fires on the home screen, so the control has to be reachable there — and the preference persisted under `cg.sound` (separate key from `cg.g`, so clearing a game does not reset it).
+`src/lib/sound.ts` owns all of it behind a three-function surface — `play(cue)`,
+`isEnabled()`, `setEnabled(on)`. The `AudioContext` is created **lazily on the first cue
+after the user enables sound**, never at module load: browsers block audio contexts created
+before a user gesture, and constructing one eagerly would both fail and leak a suspended
+context.
 
-The module preloads via `new Audio()`, plays by cloning the element so overlapping plays do not cut each other off, and **fails silently** if a file is missing, if autoplay policy blocks it, or if `Audio` is unavailable — sound is never allowed to break the game. This also makes it testable in the node environment, where `Audio` does not exist.
+**Muted by default**, with a toggle pinned to the top-right of the table surface on **both**
+routes — the deal cue fires on the home screen, so the control has to be reachable there —
+and the preference persisted under `cg.sound`, a separate key from `cg.g` so clearing a
+game does not reset it.
 
-**On the assets:** these are the licensed-content boundary. The implementation ships generated placeholder WAVs so the feature works immediately without waiting on sourcing, and the files can be replaced with better recordings at any time without touching code. Keep each under ~60 KB (a sub-second mono WAV at 22 kHz is roughly that); normalise to about −16 LUFS so the cues sit under the UI rather than over it.
-
----
+Every entry point **fails silently**: if `AudioContext` is undefined (the node test
+environment, older browsers), if construction throws, or if the context is blocked. Sound
+is never allowed to break the game, and `play()` is a no-op rather than a throw.
 
 ## 7. Accessibility
 
@@ -225,7 +235,6 @@ Both were explicitly called out as needing work.
 | `src/components/live-region.tsx` | new — `aria-live` announcements |
 | `src/pages/home.tsx` + css | restyle, loading and error states |
 | `src/pages/game.tsx` + css | mount round progress, sound toggle, live region |
-| `public/sounds/*.mp3` | new assets |
 
 ---
 
@@ -238,7 +247,7 @@ New logic-only tests:
 | File | Coverage |
 | --- | --- |
 | `hooks/use-count-up.test.ts` | interpolation maths at t=0, midpoint and t=1; returns the target immediately when reduced motion is set |
-| `lib/sound.test.ts` | preference round-trips through storage; `play()` is a no-op and does not throw when `Audio` is undefined, when a file is missing, and when playback rejects |
+| `lib/sound.test.ts` | preference round-trips through storage and defaults to muted; `play()` is a no-op and does not throw when `AudioContext` is undefined, when construction throws, and when called while muted; no context is constructed until the first cue after enabling |
 | `hooks/use-play-game.test.ts` | extended: `lastRoundWinnerId` matches the awarded player; is `null` before any round settles |
 
 Adding a required field to `GameState` ripples into every full state literal — notably the
@@ -262,5 +271,5 @@ Motion itself is not unit-tested — it is CSS, and asserting keyframes would te
   - the round indicator advances 1 → 10
   - the whole game is playable with keyboard only, focus always visible
   - with OS "reduce motion" enabled, nothing animates and nothing breaks
-  - with sound enabled, cues fire and never overlap harshly; muted is genuinely silent
+  - with sound enabled, cues fire and never overlap harshly; muted is genuinely silent; enabling mid-game works (the context is created on the first cue, not at load)
   - modal traps focus, Escape closes, focus returns to the table
