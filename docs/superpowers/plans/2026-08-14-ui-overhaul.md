@@ -2373,10 +2373,10 @@ The `.community` and `.slot` rules keep every dimension they had — read the pr
 
 The played card is removed from `remainingCards` by the same dispatch that adds it to the community, so it needs `useDeparted` too. It is rendered just past the last remaining card, which reads as a card lifting off the hand; its exact origin is not recoverable without the layout measurement FLIP would have needed, and for three of four players the cards are identical anyway.
 
-In `src/components/players-cards.tsx`, add to the imports:
+In `src/components/players-cards.tsx`, widen the existing type import rather than adding a second one from `'react'`, and add the hook:
 
 ```tsx
-import type { CSSProperties } from 'react'
+import type { CSSProperties, KeyboardEvent } from 'react'
 
 import { useDeparted } from '@cg/hooks/use-departed'
 ```
@@ -3400,6 +3400,10 @@ export const Modal = () => {
   border-radius: 0 8px 8px 0;
 }
 
+.scoreName {
+  text-align: left;
+}
+
 .scoreValue {
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -3450,15 +3454,7 @@ grep -o 'styles\.[a-zA-Z]*' src/components/modal.tsx | sort -u
 
 Expected, all present in `modal.module.css`: `styles.content`, `styles.heading`, `styles.newGame`, `styles.overlay`, `styles.scoreName`, `styles.scoreValue`, `styles.scores`, `styles.subheading`, `styles.winnerRow`.
 
-**`styles.scoreName` is used by the component and is not defined above.** Add it to the stylesheet:
-
-```css
-.scoreName {
-  text-align: left;
-}
-```
-
-This is the exact defect Trap 2 describes — a lookup that resolves to `undefined` and renders `class="undefined"` in silence. Finding it here is the check working, not a mistake in the plan.
+Nine names, nine classes. A lookup with no matching class resolves to `undefined` and renders `class="undefined"` in silence — CSS modules will not warn you, and neither will the compiler.
 
 - [ ] **Step 7: Run the full gate and commit**
 
