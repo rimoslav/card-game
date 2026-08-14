@@ -749,6 +749,10 @@ export const useCountUp = (value: number, durationMs: number): number => {
 
     if (prefersReducedMotion() || typeof requestAnimationFrame !== 'function') {
       displayedRef.current = value
+      // A single jump to the target, not derived state: there is no animation to run, so
+      // this branch is the whole "animation". The rule guards against cascading renders
+      // from state derived in an effect; this sets one value once and returns.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDisplay(value)
 
       return
