@@ -4,11 +4,20 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(5, 7, 6, 0.72);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+  /*
+   * The mechanism the rewrite verified: parked behind everything when closed so it cannot
+   * intercept a click, brought forward when open. Do not replace it with conditional
+   * mounting — the transition needs both states to exist.
+   */
   z-index: -9999;
 }
 
 .overlay[data-open='true'] {
+  opacity: 1;
   z-index: 9999;
 }
 
@@ -16,35 +25,108 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  width: 500px;
-  max-width: calc(100vw - 10px);
-  height: auto;
+  box-sizing: border-box;
+  width: 460px;
+  max-width: calc(100vw - 32px);
+  padding: 28px;
   background: var(--surface-1);
-  border: 1px solid #ccc;
-  transition: 1.1s ease-out;
-  box-shadow: -32px 0 0 rgba(0, 0, 0, 0.2);
-  filter: blur(8px);
-  transform: scale(0.33) translate(-50%, -50%);
+  border: 1px solid var(--rail);
+  border-radius: 14px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
+  transform: translate(-50%, -46%) scale(0.96);
   opacity: 0;
   visibility: hidden;
+  transition: transform var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out),
+    visibility var(--dur-base) var(--ease-out);
 }
 
+/* visibility: hidden is what keeps the New game button out of the tab order when closed. */
 .content[data-open='true'] {
-  box-shadow: 16px 32px 32px rgba(0, 0, 0, 0.2);
-  filter: blur(0);
-  transform: scale(1) translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(1);
   opacity: 1;
   visibility: visible;
 }
 
-.rows {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+.content:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 
-.row {
-  display: flex;
-  flex-direction: column;
+.heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 500;
+  color: var(--text-hi);
+  text-align: center;
+}
+
+.subheading {
+  margin: 20px 0 8px;
+  font-size: var(--fs-xs);
+  color: var(--text-lo);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.scores {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.scores td {
+  padding: 10px 12px;
+  font-size: var(--fs-base);
+  color: var(--text-lo);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.winnerRow td {
+  background: var(--accent-soft);
+  color: var(--text-hi);
+  font-weight: 700;
+}
+
+.winnerRow td:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.winnerRow td:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+.scoreName {
+  text-align: left;
+}
+
+.scoreValue {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.newGame {
+  display: block;
+  width: 100%;
+  margin-top: 24px;
+  padding: 14px 20px;
+  background: var(--accent);
+  color: var(--surface-0);
+  border: 0;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: var(--fs-base);
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+
+.newGame:hover {
+  filter: brightness(1.1);
+}
+
+.newGame:focus-visible {
+  outline: 2px solid var(--text-hi);
+  outline-offset: 2px;
 }

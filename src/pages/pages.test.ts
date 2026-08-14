@@ -3,10 +3,15 @@ import { renderToString } from 'react-dom/server'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, beforeEach } from 'vitest'
 
+import { NUMBER_OF_CARDS_PER_PLAYER } from '@cg/constants'
+import { Modal } from '@cg/components/modal'
+import { PlayGameContextProvider } from '@cg/hooks/use-play-game'
+import type { PlayGameValue } from '@cg/hooks/use-play-game'
 import { ALL_CODES } from '@cg/lib/cards'
 import { saveGame, setStore } from '@cg/lib/storage'
 import { Home } from '@cg/pages/home'
 import { Game } from '@cg/pages/game'
+import type { Player } from '@cg/types'
 
 const mem = (): Storage => {
   const m = new Map<string, string>()
@@ -73,5 +78,56 @@ describe('Game renders a dealt game', () => {
     expect(html).toContain('<button')
     // The old alt="Card 7S" is gone: opponent and community cards are aria-hidden now.
     expect(html).not.toContain('alt="Card ')
+  })
+})
+
+describe('Modal names the winner', () => {
+  const player = (id: number, score: number): Player => ({
+    id,
+    name: id === 0 ? 'User' : `Player ${id}`,
+    score,
+    remainingCards: [],
+    wonCards: []
+  })
+
+  const finished = (leads: Player[], players: Player[]): PlayGameValue => ({
+    canUserPlay: false,
+    activePlayerId: 0,
+    roundNumber: NUMBER_OF_CARDS_PER_PLAYER + 1,
+    players,
+    community: [],
+    gameLeads: leads,
+    lastRoundWinnerId: leads[0].id,
+    numberOfPlayers: players.length,
+    hasMoreThanTwoPlayers: players.length > 2,
+    playersSortedByPoints: [...players].sort((first, second) => second.score - first.score),
+    getIsPlayerLeading: candidate => leads.some(lead => lead.id === candidate.id),
+    discardACard: () => undefined
+  })
+
+  // createElement's overload for a component with a required `children` prop checks the
+  // props object literally — it does not merge a variadic third argument into that check
+  // the way JSX does. Passing children inside the props object sidesteps that without
+  // loosening PlayGameContextProvider's children prop to optional in production code.
+  const renderModal = (value: PlayGameValue) =>
+    render(h(PlayGameContextProvider, { value, children: h(Modal) }))
+
+  it('names a single winner and lists the final scores', () => {
+    const players = [player(0, 84), player(1, 61)]
+    const html = renderModal(finished([players[0]], players))
+
+    expect(html).toContain('User wins!')
+    expect(html).toContain('Final scores')
+    expect(html).toContain('84')
+    expect(html).toContain('61')
+    expect(html).toContain('role="dialog"')
+    expect(html).toContain('aria-modal="true"')
+  })
+
+  it('names both winners on a tie', () => {
+    const players = [player(0, 70), player(1, 70)]
+    const html = renderModal(finished(players, players))
+
+    expect(html).toContain('User &amp; Player 1')
   })
 })
