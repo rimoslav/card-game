@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router'
+import { Navigate, useNavigate } from 'react-router'
 
 import { Blank } from '@cg/components/common/blank'
 import { CommunityCards } from '@cg/components/community-cards'
@@ -9,12 +9,13 @@ import { PlayingTable } from '@cg/components/playing-table'
 import { RoundProgress } from '@cg/components/round-progress'
 import { SoundToggle } from '@cg/components/sound-toggle'
 import { PlayGameContextProvider, usePlayGame } from '@cg/hooks/use-play-game'
-import { loadGame } from '@cg/lib/storage'
+import { clearGame, loadGame } from '@cg/lib/storage'
 import type { StoredGame } from '@cg/lib/storage'
 
 import styles from '@cg/pages/game.module.css'
 
 const Board = ({ game: stored }: { game: StoredGame }) => {
+  const navigate = useNavigate()
   const game = usePlayGame({
     playerCount: stored.playerCount,
     hands: stored.hands
@@ -26,6 +27,15 @@ const Board = ({ game: stored }: { game: StoredGame }) => {
         hasManyPlayers={game.hasMoreThanTwoPlayers}
         header={
           <>
+            <button
+              type="button"
+              className={styles.headerAction}
+              onClick={() => {
+                clearGame()
+                void navigate('/')
+              }}>
+              New game
+            </button>
             <RoundProgress />
             <SoundToggle />
           </>

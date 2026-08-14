@@ -61,9 +61,16 @@ export const Modal = () => {
     const first = focusable[0]
     const last = focusable[focusable.length - 1]
 
-    // Wrap at both ends. Without this, Tab walks straight out of the dialog and onto the
-    // table behind it, which is exactly what aria-modal promises it will not do.
-    if (event.shiftKey && document.activeElement === first) {
+    /*
+     * Wrap at both ends. Without this, Tab walks straight out of the dialog and onto the
+     * table behind it, which is exactly what aria-modal promises it will not do.
+     *
+     * The panel itself is included in the backward case. It takes initial focus and has
+     * tabIndex={-1}, so it is not in FOCUSABLE — a Shift+Tab pressed as the very first key
+     * would match neither end and escape backwards out of the dialog. Forward Tab from the
+     * panel needs no help: the browser's own next stop is already `first`.
+     */
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === panelRef.current)) {
       event.preventDefault()
       last.focus()
     } else if (!event.shiftKey && document.activeElement === last) {
@@ -89,8 +96,19 @@ export const Modal = () => {
             : `${winners} wins!`
           }
         </h2>
-        <p className={styles.subheading}>Final scores</p>
         <table className={styles.scores}>
+          <caption className={styles.subheading}>Final scores</caption>
+          {/*
+            * Real header cells, hidden from sight but not from the accessibility tree.
+            * Without them a screen reader reads "User, 84" with no way to tell which
+            * column is which — a layout table wearing a standings table's markup.
+            */}
+          <thead className={styles.visuallyHidden}>
+            <tr>
+              <th scope="col">Player</th>
+              <th scope="col">Score</th>
+            </tr>
+          </thead>
           <tbody>
             {game.playersSortedByPoints.map(player => (
               <tr

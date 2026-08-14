@@ -63,7 +63,7 @@
 }
 
 .subheading {
-  margin: 20px 0 8px;
+  padding: 20px 0 8px;
   font-size: var(--fs-xs);
   color: var(--text-lo);
   text-transform: uppercase;
@@ -74,6 +74,18 @@
 .scores {
   width: 100%;
   border-collapse: collapse;
+}
+
+/* Present to assistive technology, absent to the eye — display:none would remove it from
+   the accessibility tree and defeat the point. */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .scores td {
