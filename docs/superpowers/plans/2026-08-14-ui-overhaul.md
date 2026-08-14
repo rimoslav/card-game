@@ -1745,13 +1745,21 @@ describe('cardName', () => {
     expect(cardName(cardFromCode('KH'))).toBe('King of Hearts')
   })
 
-  it('names every code in the deck without producing undefined', () => {
-    ALL_CODES.forEach(code => {
-      const name = cardName(cardFromCode(code))
+  // Both halves are pinned to a closed alternation. A suit-only pattern would not catch a
+  // missing VALUE_NAMES entry: the `?? card.id[0]` fallback renders "3 of Diamonds", which
+  // contains no "undefined" and ends in a real suit, so the test would pass over the bug.
+  it('names every code in the deck, with no fallback leaking through', () => {
+    const NAME =
+      /^(Ace|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten|Jack|Queen|King) of (Spades|Diamonds|Clubs|Hearts)$/
 
-      expect(name).not.toContain('undefined')
-      expect(name).toMatch(/ of (Spades|Diamonds|Clubs|Hearts)$/)
+    const names = ALL_CODES.map(code => cardName(cardFromCode(code)))
+
+    names.forEach(name => {
+      expect(name).toMatch(NAME)
     })
+
+    // 52 distinct names — catches a value or suit mapped twice.
+    expect(new Set(names).size).toBe(ALL_CODES.length)
   })
 })
 ```
@@ -1967,8 +1975,8 @@ export const PlayableCard = ({
 One tab stop for the whole hand; arrows move within it; Enter and Space play, natively, because each card is a real button.
 
 ```tsx
-import { useRef, useState } from 'react'
-import type { KeyboardEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { FocusEvent, KeyboardEvent } from 'react'
 
 import { Card, PlayableCard } from '@cg/components/card'
 import { cx } from '@cg/lib/utils'
@@ -1993,10 +2001,41 @@ export const PlayersCards = ({
 }) => {
   const [focusedIndex, setFocusedIndex] = useState(0)
   const buttonsRef = useRef<(HTMLButtonElement | null)[]>([])
+  // Whether the keyboard is currently inside this hand. Without it the effect below would
+  // pull focus to the hand for a mouse player who never touched the keyboard at all.
+  const hasFocusRef = useRef(false)
 
   // The hand shrinks all game. Clamping at render rather than storing a clamped value
   // keeps the roving index valid without an effect that fights the user's arrow keys.
   const rovingIndex = Math.min(focusedIndex, Math.max(cards.length - 1, 0))
+
+  /*
+   * Put focus back after the played card's button unmounts. `aria-disabled` keeps the hand
+   * focusable through the delay, but the reducer removes the played card from
+   * remainingCards in the same dispatch that plays it — so that button leaves the DOM and
+   * the browser drops focus to <body>. Without this, a keyboard player would have to tab
+   * back into the hand after every single play.
+   *
+   * Gated on state, never a mount latch: it acts only when the hand had focus AND focus is
+   * now orphaned, so StrictMode's double invoke on mount is a no-op.
+   */
+  useEffect(() => {
+    if (!hasFocusRef.current || typeof document === 'undefined') {
+      return
+    }
+
+    if (document.activeElement === null || document.activeElement === document.body) {
+      buttonsRef.current[rovingIndex]?.focus()
+    }
+  }, [cards.length, rovingIndex])
+
+  const handleBlur = (event: FocusEvent<HTMLDivElement>): void => {
+    // A null relatedTarget means focus was dropped rather than moved — which is precisely
+    // the case the effect above recovers from, so the flag has to survive it.
+    if (event.relatedTarget instanceof Node && !event.currentTarget.contains(event.relatedTarget)) {
+      hasFocusRef.current = false
+    }
+  }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
@@ -2031,6 +2070,8 @@ export const PlayersCards = ({
       className={styles.hand}
       role="group"
       aria-label="Your hand"
+      onFocus={() => { hasFocusRef.current = true }}
+      onBlur={handleBlur}
       onKeyDown={handleKeyDown}>
       {cards.map((card, index) => (
         <PlayableCard
