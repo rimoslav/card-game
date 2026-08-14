@@ -96,12 +96,20 @@ describe('cardName', () => {
     expect(cardName(cardFromCode('KH'))).toBe('King of Hearts')
   })
 
-  it('names every code in the deck without producing undefined', () => {
-    ALL_CODES.forEach(code => {
-      const name = cardName(cardFromCode(code))
+  // Both halves are pinned to a closed alternation. A suit-only pattern would not catch a
+  // missing VALUE_NAMES entry: the `?? card.id[0]` fallback renders "3 of Diamonds", which
+  // contains no "undefined" and ends in a real suit, so the test would pass over the bug.
+  it('names every code in the deck, with no fallback leaking through', () => {
+    const NAME =
+      /^(Ace|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten|Jack|Queen|King) of (Spades|Diamonds|Clubs|Hearts)$/
 
-      expect(name).not.toContain('undefined')
-      expect(name).toMatch(/ of (Spades|Diamonds|Clubs|Hearts)$/)
+    const names = ALL_CODES.map(code => cardName(cardFromCode(code)))
+
+    names.forEach(name => {
+      expect(name).toMatch(NAME)
     })
+
+    // 52 distinct names — catches a value or suit mapped twice.
+    expect(new Set(names).size).toBe(ALL_CODES.length)
   })
 })
