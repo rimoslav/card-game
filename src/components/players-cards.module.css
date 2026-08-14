@@ -36,3 +36,27 @@
 .bordered {
   border: 2px solid var(--rail);
 }
+
+/*
+ * The played card, held on screen by useDeparted so it has something to animate. Absolute
+ * so it does not re-widen a hand whose fixed width is load-bearing; --leaving-index places
+ * it just past the last remaining card, matching the overlap step used by .hand > * + *.
+ */
+.leaving {
+  position: absolute;
+  top: 0;
+  left: calc(var(--leaving-index) * var(--card-stick));
+  animation: lift 150ms var(--ease-out) both;
+}
+
+@keyframes lift {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateY(-30px) scale(0.94);
+    opacity: 0;
+  }
+}

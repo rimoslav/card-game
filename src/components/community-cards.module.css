@@ -20,3 +20,66 @@
   border: 3px solid var(--rail);
   border-radius: 8px;
 }
+
+/*
+ * Arrival. The card slides in from the direction of the seat that played it, set per slot
+ * as --from-x / --from-y by the component. `both` holds the from-state before the first
+ * frame so there is no flash of the settled position. React keys these by card id, so the
+ * animation runs once when the card mounts and never replays.
+ */
+.arriving {
+  animation: arrive var(--dur-card) var(--ease-out) both;
+}
+
+@keyframes arrive {
+  from {
+    transform: translate(var(--from-x, 0), var(--from-y, 0)) rotate(-7deg);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/*
+ * The pot ceremony. The settled pile is already gone from state — useDeparted holds it —
+ * so these are absolutely positioned back over the slots they occupied. --slot-index is
+ * the seat, and card-w + 6px is one slot's full width including its border.
+ */
+.potGhost {
+  position: absolute;
+  top: 0;
+  left: calc(var(--slot-index) * (var(--card-w) + 6px) + 3px);
+  animation: travel var(--dur-pot) var(--ease-out) 160ms both;
+}
+
+/* The winning card is picked out for a beat before the pile leaves. */
+.winningGhost {
+  animation:
+    glow 160ms var(--ease-out) both,
+    travel var(--dur-pot) var(--ease-out) 160ms both;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  }
+
+  to {
+    box-shadow: 0 0 0 3px var(--accent), 0 0 24px var(--accent);
+  }
+}
+
+@keyframes travel {
+  from {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+
+  to {
+    transform: translate(var(--to-x, 0), var(--to-y, 0)) scale(0.75);
+    opacity: 0;
+  }
+}

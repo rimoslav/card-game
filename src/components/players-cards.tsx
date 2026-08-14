@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import type { FocusEvent, KeyboardEvent } from 'react'
+import type { CSSProperties, FocusEvent, KeyboardEvent } from 'react'
 
 import { Card, PlayableCard } from '@cg/components/card'
+import { useDeparted } from '@cg/hooks/use-departed'
 import { cx } from '@cg/lib/utils'
 import type { Card as CardType } from '@cg/types'
 
@@ -24,6 +25,10 @@ export const PlayersCards = ({
 }) => {
   const [focusedIndex, setFocusedIndex] = useState(0)
   const buttonsRef = useRef<(HTMLButtonElement | null)[]>([])
+
+  // Hands off to the community's arrival animation: the exit runs 150ms and the arrival
+  // starts as the card leaves, so the eye reads one continuous motion.
+  const leaving = useDeparted(cards, card => card.id, 200)
 
   // Whether the keyboard is currently inside this hand. Without it the effect below would
   // pull focus to the hand for a mouse player who never touched the keyboard at all.
@@ -85,6 +90,16 @@ export const PlayersCards = ({
             isFlipped={areCardsFlipped}
           />
         ))}
+        {leaving.map(card => (
+          <Card
+            key={`leaving-${card.id}`}
+            isGhost
+            card={card}
+            isFlipped={areCardsFlipped}
+            className={styles.leaving}
+            style={{ '--leaving-index': cards.length } as CSSProperties}
+          />
+        ))}
       </div>
     )
   }
@@ -105,6 +120,15 @@ export const PlayersCards = ({
           tabIndex={index === rovingIndex ? 0 : -1}
           buttonRef={element => { buttonsRef.current[index] = element }}
           onCardClick={onCardClick}
+        />
+      ))}
+      {leaving.map(card => (
+        <Card
+          key={`leaving-${card.id}`}
+          isGhost
+          card={card}
+          className={styles.leaving}
+          style={{ '--leaving-index': cards.length } as CSSProperties}
         />
       ))}
     </div>
