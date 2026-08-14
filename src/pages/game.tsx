@@ -5,6 +5,7 @@ import { CommunityCards } from '@cg/components/community-cards'
 import { Modal } from '@cg/components/modal'
 import { Player } from '@cg/components/player'
 import { PlayingTable } from '@cg/components/playing-table'
+import { SoundToggle } from '@cg/components/sound-toggle'
 import { PlayGameContextProvider, usePlayGame } from '@cg/hooks/use-play-game'
 import { loadGame } from '@cg/lib/storage'
 import type { StoredGame } from '@cg/lib/storage'
@@ -19,7 +20,9 @@ const Board = ({ game: stored }: { game: StoredGame }) => {
 
   return (
     <PlayGameContextProvider value={game}>
-      <PlayingTable hasManyPlayers={game.hasMoreThanTwoPlayers}>
+      <PlayingTable
+        hasManyPlayers={game.hasMoreThanTwoPlayers}
+        header={<SoundToggle />}>
         <div className={styles.board} data-many-players={game.hasMoreThanTwoPlayers}>
           <div className={styles.colA}>
             <Player player={game.players[0]} />

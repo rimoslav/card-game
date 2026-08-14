@@ -3,6 +3,7 @@ import { Button } from '@cg/components/common/button'
 import { Text } from '@cg/components/common/text'
 import { Wrap } from '@cg/components/common/wrap'
 import { PlayingTable } from '@cg/components/playing-table'
+import { SoundToggle } from '@cg/components/sound-toggle'
 import { MAX_PLAYERS, MIN_PLAYERS } from '@cg/constants'
 import { useCreateNewGame } from '@cg/hooks/use-create-game'
 import { range } from '@cg/lib/utils'
@@ -11,7 +12,7 @@ export const Home = () => {
   const { isLoading, error, startNewGame } = useCreateNewGame()
 
   return (
-    <PlayingTable>
+    <PlayingTable header={<SoundToggle />}>
       <Wrap direction="col" align="center">
         <Text size={30} align="center">Select Number Of Players</Text>
         <Blank height={50} />

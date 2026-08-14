@@ -30,3 +30,20 @@
     align-items: stretch;
   }
 }
+
+/*
+ * Absolute, not a flex child. .table centres a single row; adding a sibling would put the
+ * header beside the board and destroy the responsive matrix the rewrite verified. The
+ * 56px top padding on .table is what keeps it clear of the board.
+ */
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+}
