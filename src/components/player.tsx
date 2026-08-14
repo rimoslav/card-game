@@ -28,7 +28,8 @@ export const Player = ({ player }: { player?: PlayerType }) => {
         <PlayersCards
           cards={player.remainingCards}
           areCardsFlipped={player.id !== USERS_POSITION}
-          onCardClick={canDiscard ? game.discardACard : undefined}
+          isPlayable={canDiscard}
+          onCardClick={player.id === USERS_POSITION ? game.discardACard : undefined}
         />
         <div className={styles.wonCards}>
           <PlayersCards

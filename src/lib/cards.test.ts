@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ALL_CODES, cardFromCode, decodeCard, encodeCard, rankOf } from '@cg/lib/cards'
+import { ALL_CODES, cardFromCode, cardName, decodeCard, encodeCard, rankOf } from '@cg/lib/cards'
 
 describe('ALL_CODES', () => {
   it('contains all 52 distinct cards', () => {
@@ -77,5 +77,31 @@ describe('cardFromCode', () => {
 
   it('uses the local image for the ace of diamonds', () => {
     expect(cardFromCode('AD').img).toBe('/ace-of-diamonds.png')
+  })
+})
+
+describe('cardName', () => {
+  it('names a numeric card', () => {
+    expect(cardName(cardFromCode('7S'))).toBe('Seven of Spades')
+  })
+
+  it('names the ten, whose code digit is 0', () => {
+    expect(cardName(cardFromCode('0H'))).toBe('Ten of Hearts')
+  })
+
+  it('names the court cards and the ace', () => {
+    expect(cardName(cardFromCode('AD'))).toBe('Ace of Diamonds')
+    expect(cardName(cardFromCode('JC'))).toBe('Jack of Clubs')
+    expect(cardName(cardFromCode('QS'))).toBe('Queen of Spades')
+    expect(cardName(cardFromCode('KH'))).toBe('King of Hearts')
+  })
+
+  it('names every code in the deck without producing undefined', () => {
+    ALL_CODES.forEach(code => {
+      const name = cardName(cardFromCode(code))
+
+      expect(name).not.toContain('undefined')
+      expect(name).toMatch(/ of (Spades|Diamonds|Clubs|Hearts)$/)
+    })
   })
 })

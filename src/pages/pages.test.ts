@@ -61,4 +61,17 @@ describe('Game renders a dealt game', () => {
     const html = render(h(Game), '/game')
     expect(html).not.toContain('Name: User')
   })
+
+  it('renders the user\'s own cards as labelled buttons and the opponents\' as images', () => {
+    const hands = [['7S', ...ALL_CODES.slice(1, 10)], ALL_CODES.slice(10, 20)]
+    saveGame({ playerCount: 2, hands })
+
+    const html = render(h(Game), '/game')
+
+    // The user's hand is operable; every other card on the table is decorative.
+    expect(html).toContain('aria-label="Seven of Spades"')
+    expect(html).toContain('<button')
+    // The old alt="Card 7S" is gone: opponent and community cards are aria-hidden now.
+    expect(html).not.toContain('alt="Card ')
+  })
 })
