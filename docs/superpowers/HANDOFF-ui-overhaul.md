@@ -13,9 +13,8 @@ Do **not** re-run brainstorming. The design conversation happened; its outcome i
 
 ## State of the repo
 
-- Branch `typescript-rewrite`, PR #3 open against `main`, unmerged.
+- PR #3 (the TypeScript rewrite) is **merged**; `main` contains it. Branch this work off `main`.
 - 64 tests, `npm audit` clean, runtime dependencies exactly `react`, `react-dom`, `react-router`.
-- **Decide first:** branch this work off `typescript-rewrite`, or wait for #3 to merge and branch off `main`. Branching off `typescript-rewrite` is fine and probably simpler — it is where all this code lives.
 
 ## Settled decisions — do not reopen
 
@@ -44,6 +43,21 @@ These are real defects that reached review during the rewrite. Do not rediscover
 `playGameReducer` is pinned by a property test playing 900 seeded games against ground truth. The spec permits exactly two non-view changes — `TIME_BETWEEN_PLAYS_MS` to 650, and an additive `GameState.lastRoundWinnerId`. **If the property test fails, the change is wrong.**
 
 Adding a required field to `GameState` breaks every full state literal, notably `stateWith` in `use-play-game.test.ts` and the smoke tests. That is a compile error, so `tsc` will list each site.
+
+## Outstanding — remind the owner
+
+**One check from the rewrite's manual pass was never run: the deck-fetch error message.**
+When `createDeck`/`drawCards` fail, Home should show *"Could not deal a new game. Please
+try again."* The fetch rejection has unit coverage; the catch → dispatch → rendered-string
+chain has never been observed in a browser. About 30 seconds:
+
+- Load the app on the home screen with the network normal, **then** set DevTools Network to
+  Offline, then click a player-count button. Do not reload while offline — the dev server
+  is on localhost and Offline blocks that too, which just yields Chrome's dinosaur page.
+- Or: click a button once so a `deckofcardsapi.com` request appears in the Network list,
+  right-click it, **Block request domain**, then click again.
+
+Raise this when the UI work reaches its own manual pass — both can be done in one sitting.
 
 ## What cannot be verified automatically
 
