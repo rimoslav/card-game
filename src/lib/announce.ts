@@ -17,9 +17,19 @@ export interface AnnounceState {
  * assistive technology announces it when it changes, so there is no "has this already been
  * said" bookkeeping to get wrong — and the whole thing is testable without a DOM.
  *
- * Every play is announced, not only the user's. Announcing outcomes alone would leave a
- * screen-reader user unable to follow the table at all, and a polite live region coalesces
- * updates rather than queueing every one.
+ * Every play is announced, not only the user's: outcomes alone would leave a screen-reader
+ * user unable to follow the table at all.
+ *
+ * The cost of that choice is unverified. `aria-live="polite"` controls WHEN a change is
+ * spoken — the AT waits until the user is idle — not WHETHER a superseded change is
+ * dropped. ARIA guarantees no coalescing, and screen readers differ: several queue every
+ * distinct mutation. At TIME_BETWEEN_PLAYS_MS (650ms) with sentences that take seconds to
+ * speak, a four-player round could build a backlog and end up reading stale plays.
+ *
+ * This needs a real screen reader to settle and is on the manual-pass list. If a backlog
+ * shows up, the fix is to narrow the second branch below to `seat === USERS_POSITION`, so
+ * only the user's own play and the round and game outcomes are announced — the spec's own
+ * three examples are exactly those.
  */
 export const announcementFor = ({
   roundNumber,
