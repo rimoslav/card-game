@@ -3325,9 +3325,16 @@ export const Modal = () => {
     const first = focusable[0]
     const last = focusable[focusable.length - 1]
 
-    // Wrap at both ends. Without this, Tab walks straight out of the dialog and onto the
-    // table behind it, which is exactly what aria-modal promises it will not do.
-    if (event.shiftKey && document.activeElement === first) {
+    /*
+     * Wrap at both ends. Without this, Tab walks straight out of the dialog and onto the
+     * table behind it, which is exactly what aria-modal promises it will not do.
+     *
+     * The panel itself is included in the backward case. It takes initial focus and has
+     * tabIndex={-1}, so it is not in FOCUSABLE — a Shift+Tab pressed as the very first key
+     * would match neither end and escape backwards out of the dialog. Forward Tab from the
+     * panel needs no help: the browser's own next stop is already `first`.
+     */
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === panelRef.current)) {
       event.preventDefault()
       last.focus()
     } else if (!event.shiftKey && document.activeElement === last) {
@@ -3353,8 +3360,19 @@ export const Modal = () => {
             : `${winners} wins!`
           }
         </h2>
-        <p className={styles.subheading}>Final scores</p>
         <table className={styles.scores}>
+          <caption className={styles.subheading}>Final scores</caption>
+          {/*
+            * Real header cells, hidden from sight but not from the accessibility tree.
+            * Without them a screen reader reads "User, 84" with no way to tell which
+            * column is which — a layout table wearing a standings table's markup.
+            */}
+          <thead className={styles.visuallyHidden}>
+            <tr>
+              <th scope="col">Player</th>
+              <th scope="col">Score</th>
+            </tr>
+          </thead>
           <tbody>
             {game.playersSortedByPoints.map(player => (
               <tr
@@ -3446,12 +3464,24 @@ export const Modal = () => {
 }
 
 .subheading {
-  margin: 20px 0 8px;
+  padding: 20px 0 8px;
   font-size: var(--fs-xs);
   color: var(--text-lo);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   text-align: center;
+}
+
+/* Present to assistive technology, absent to the eye — display:none would remove it from
+   the accessibility tree and defeat the point. */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .scores {
@@ -3511,6 +3541,86 @@ export const Modal = () => {
 
 .newGame:focus-visible {
   outline: 2px solid var(--text-hi);
+  outline-offset: 2px;
+}
+```
+
+- [ ] **Step 4b: Give the player a way back after Escape**
+
+Escape sets `isDismissed`, and nothing resets it — so once dismissed, the modal's "New game"
+button (the only one in the app) is `visibility: hidden` and out of the tab order for the
+life of that mounted `Board`. Recovery would mean the browser's back button or the URL bar.
+Adding Escape without this step turns a working end-of-game screen into a dead end.
+
+The game header already exists as an absolutely-positioned bar; a third control costs no
+layout. It also closes a gap that predates this overhaul — there was previously no way to
+abandon a game in progress and start over.
+
+In `src/pages/game.tsx`, add the import:
+
+```tsx
+import { clearGame } from '@cg/lib/storage'
+```
+
+and put the button first in the header fragment, before `<RoundProgress />`:
+
+```tsx
+        header={
+          <>
+            <button
+              type="button"
+              className={styles.headerAction}
+              onClick={() => {
+                clearGame()
+                void navigate('/')
+              }}>
+              New game
+            </button>
+            <RoundProgress />
+            <SoundToggle />
+          </>
+        }>
+```
+
+`Board` needs the router hook for that — add `useNavigate` to the existing `react-router`
+import and call it at the top of `Board`:
+
+```tsx
+import { Navigate, useNavigate } from 'react-router'
+```
+```tsx
+const Board = ({ game: stored }: { game: StoredGame }) => {
+  const navigate = useNavigate()
+```
+
+`clearGame()` before navigating matters: `Home` deals a fresh game and overwrites the stored
+one anyway, but leaving the finished game behind means a browser Back lands the player on a
+completed board.
+
+Append to `src/pages/game.module.css`:
+
+```css
+.headerAction {
+  padding: 6px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--rail);
+  border-radius: 999px;
+  color: var(--text-lo);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.headerAction:hover {
+  color: var(--text-hi);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.headerAction:focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 ```
