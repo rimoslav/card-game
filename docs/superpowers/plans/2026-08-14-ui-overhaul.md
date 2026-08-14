@@ -1278,7 +1278,12 @@ interface AudioWindow {
 
 let context: AudioContext | null = null
 let master: GainNode | null = null
-let isContextUnavailable = false
+// The constructor a cached context was built from, re-checked against the current
+// window.AudioContext on every call. Deliberately NOT a sticky "unavailable" flag: a
+// context blocked on the first cue (audio before a user gesture) must be retried on the
+// next one, or sound stays dead for the rest of the page's life. Retrying costs one
+// caught exception per cue and nothing else.
+let contextCtor: (typeof AudioContext) | undefined
 
 // Read through on every call rather than cached: a cache would need a reset seam for the
 // tests, and a localStorage read costs nothing at the rate cues fire.
@@ -1294,19 +1299,17 @@ export const setEnabled = (on: boolean): void => {
  * both fail and leak a suspended context.
  */
 const getContext = (): AudioContext | null => {
-  if (context !== null || isContextUnavailable) {
-    return context
-  }
-
   const audioWindow = typeof window === 'undefined'
     ? undefined
     : window as unknown as AudioWindow
 
   const Ctor = audioWindow?.AudioContext ?? audioWindow?.webkitAudioContext
 
-  if (!Ctor) {
-    isContextUnavailable = true
+  if (context !== null && Ctor === contextCtor) {
+    return context
+  }
 
+  if (!Ctor) {
     return null
   }
 
@@ -1320,10 +1323,10 @@ const getContext = (): AudioContext | null => {
 
     context = created
     master = gain
+    contextCtor = Ctor
 
     return context
   } catch {
-    isContextUnavailable = true
     context = null
     master = null
 
