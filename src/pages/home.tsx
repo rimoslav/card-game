@@ -1,44 +1,46 @@
-import { Blank } from '@cg/components/common/blank'
-import { Button } from '@cg/components/common/button'
-import { Text } from '@cg/components/common/text'
-import { Wrap } from '@cg/components/common/wrap'
 import { PlayingTable } from '@cg/components/playing-table'
 import { SoundToggle } from '@cg/components/sound-toggle'
 import { MAX_PLAYERS, MIN_PLAYERS } from '@cg/constants'
 import { useCreateNewGame } from '@cg/hooks/use-create-game'
 import { range } from '@cg/lib/utils'
 
+import styles from '@cg/pages/home.module.css'
+
 export const Home = () => {
   const { isLoading, error, startNewGame } = useCreateNewGame()
 
   return (
     <PlayingTable header={<SoundToggle />}>
-      <Wrap direction="col" align="center">
-        <Text size={30} align="center">Select Number Of Players</Text>
-        <Blank height={50} />
-        <Wrap align="center" justify="center" wrap>
+      <div className={styles.panel}>
+        <h1 className={styles.title}>Card Game</h1>
+        <p className={styles.instruction}>
+          Highest card takes the pot. Ten rounds — the best score wins.
+        </p>
+        <p className={styles.prompt} id="player-count-label">Select number of players</p>
+        <div className={styles.segmented} role="group" aria-labelledby="player-count-label">
           {range(MIN_PLAYERS, MAX_PLAYERS + 1).map(count => (
-            <Wrap key={count}>
-              <Blank width={20} />
-              <Button
-                onClick={() => void startNewGame(count)}
-                textColor="darkSlateGray"
-                isDisabled={isLoading}>
-                {`${count} Players`}
-              </Button>
-              <Blank width={20} />
-            </Wrap>
+            <button
+              key={count}
+              type="button"
+              className={styles.segment}
+              disabled={isLoading}
+              onClick={() => void startNewGame(count)}>
+              {`${count} Players`}
+            </button>
           ))}
-        </Wrap>
+        </div>
         {isLoading
-          ? <Text size={18} color="white">Dealing…</Text>
+          ? <p className={styles.loading}>
+            <span className={styles.spinner} aria-hidden="true" />
+            Dealing…
+          </p>
           : null
         }
         {error
-          ? <Text size={18} color="white">{error}</Text>
+          ? <p className={styles.error} role="alert">{error}</p>
           : null
         }
-      </Wrap>
+      </div>
     </PlayingTable>
   )
 }

@@ -31,12 +31,19 @@ const render = (el: Parameters<typeof renderToString>[0], path = '/') =>
 beforeEach(() => { setStore(mem()) })
 
 describe('Home renders', () => {
-  it('shows the prompt and all three player-count buttons', () => {
+  it('shows the title, the instruction and all three player-count buttons', () => {
     const html = render(h(Home))
-    expect(html).toContain('Select Number Of Players')
+
+    expect(html).toContain('Card Game')
+    expect(html).toContain('Highest card takes the pot. Ten rounds — the best score wins.')
+    expect(html).toContain('Select number of players')
     expect(html).toContain('2 Players')
     expect(html).toContain('3 Players')
     expect(html).toContain('4 Players')
+  })
+
+  it('renders the sound toggle, which the deal cue needs to be reachable from here', () => {
+    expect(render(h(Home))).toContain('aria-label="Sound"')
   })
 })
 
