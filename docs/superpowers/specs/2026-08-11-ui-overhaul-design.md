@@ -113,23 +113,58 @@ A four-player game currently spends about 50 seconds waiting. At 650ms that beco
 
 ## 4. Motion
 
-### Cards arriving — animate arrival, not the journey
+### Cards moving — arrival plus an exit handoff, not FLIP
 
-The obvious technique is FLIP: measure a card's position in the hand, measure it in the community, transform between. It is rejected here. The two positions live in different DOM subtrees, so FLIP needs refs, layout measurement and teardown on every play, and the View Transitions API is unavailable because the build targets Safari 14.
+The obvious technique is FLIP: measure a card's position in the hand, measure it in the
+community, transform between. It is rejected here, for a reason worth stating plainly:
+**for three of the four players the cards are face-down and identical**, so there is
+nothing to visually track and FLIP's continuity is imperceptible. Its only real benefit is
+the user's own card. Against that, it needs a rect cache (bots play on a timer, so there is
+no click to measure from), a portal overlay to escape the hand's negative margins and the
+table's padding, `useLayoutEffect` coordination, and in-flight cancellation — and it is the
+one piece the node test suite could not cover, since there is no layout to measure.
 
-Instead, a card entering the community animates **in from the direction of the seat that played it** — translate, fade and a slight rotation — using a CSS custom property for the origin offset. No measurement, no refs, pure keyframes.
+Two CSS animations, timed to hand off, get most of the effect for a fraction of that:
 
-The seat is known without extra state: within a round, players discard in `activePlayerId` order starting at 0, so `community[i]` was played by player `i`. `CommunityCards` sets `--from-x` / `--from-y` per slot from that index.
+1. **Exit, hand side.** The played card lifts and fades toward the table over 150ms.
+2. **Arrival, table side.** The card slides into its community slot from the direction of
+   the seat that played it — translate, fade, slight rotation — over `--dur-card` (300ms),
+   starting ~50ms before the exit finishes so the eye reads one continuous motion.
+
+The seat is known without extra state: within a round players discard in `activePlayerId`
+order starting at 0, so `community[i]` was played by player `i`. `CommunityCards` sets
+`--from-x` / `--from-y` per slot from that index.
+
+### Keeping departed cards on screen — one hook, two uses
+
+Both animations have the same underlying problem. A played card is removed from
+`remainingCards` and the settled pot is emptied from `community` **in the same dispatch
+that awards them**, so in both cases the element is gone from state before it can animate
+out.
+
+Rather than solve that twice, `src/hooks/use-departed.ts` provides:
+
+```ts
+useDeparted<T>(items: readonly T[], keyOf: (item: T) => string, holdMs: number): T[]
+```
+
+It returns the items that were present on the previous render but are absent now, holding
+them for `holdMs` before dropping them. `PlayersCards` uses it to render the leaving card
+as a non-interactive ghost for the exit animation; `CommunityCards` uses it to render the
+settled pile as a ghost for the pot ceremony.
+
+This is pure logic over a sequence of arrays, so unlike FLIP it is straightforwardly
+unit-testable without a DOM.
 
 ### The pot ceremony
 
 When a round settles, three things happen in sequence:
 
 1. The winning card is briefly highlighted (a short `--accent` glow).
-2. The pile travels toward the winner's seat and fades, over `--dur-pot`.
+2. The ghost pile travels toward the winner's seat and fades, over `--dur-pot`.
 3. The winner's won-stack pulses once and their score counts up.
 
-`HANDLE_ROUND_COMPLETED` empties `community` in the same dispatch that awards it, so the pile is gone before it can animate out. `CommunityCards` therefore captures the outgoing pile: when `community` transitions from non-empty to empty, it renders the previous contents as a non-interactive ghost for `--dur-pot`, then drops it. Direction comes from `lastRoundWinnerId` (§1).
+Direction comes from `lastRoundWinnerId` (§1).
 
 ### Score count-up
 
@@ -221,11 +256,12 @@ Both were explicitly called out as needing work.
 | `src/types.ts` | `GameState.lastRoundWinnerId` |
 | `src/hooks/use-play-game.tsx` | set `lastRoundWinnerId`; no other change |
 | `src/hooks/use-count-up.ts` | new + test |
+| `src/hooks/use-departed.ts` | new + test — holds items that left state so they can animate out |
 | `src/hooks/use-sound.ts` | new — toggle state, persistence |
 | `src/lib/sound.ts` | new + test |
 | `src/components/card.tsx` + css | button semantics, focus, playable state |
-| `src/components/players-cards.tsx` + css | roving tabindex |
-| `src/components/community-cards.tsx` + css | arrival animation, exiting ghost pile |
+| `src/components/players-cards.tsx` + css | roving tabindex, exit ghost via `useDeparted` |
+| `src/components/community-cards.tsx` + css | arrival animation, ghost pile via `useDeparted` |
 | `src/components/player.tsx` + css | turn state, won-stack pulse |
 | `src/components/name-and-points.tsx` + css | restyle, count-up, turn ring |
 | `src/components/playing-table.tsx` + css | felt gradient, rail, vignette |
@@ -247,6 +283,7 @@ New logic-only tests:
 | File | Coverage |
 | --- | --- |
 | `hooks/use-count-up.test.ts` | interpolation maths at t=0, midpoint and t=1; returns the target immediately when reduced motion is set |
+| `hooks/use-departed.test.ts` | returns items absent this render but present last; returns nothing when the list only grows; drops held items after `holdMs`; handles the whole list emptying at once (the pot case) |
 | `lib/sound.test.ts` | preference round-trips through storage and defaults to muted; `play()` is a no-op and does not throw when `AudioContext` is undefined, when construction throws, and when called while muted; no context is constructed until the first cue after enabling |
 | `hooks/use-play-game.test.ts` | extended: `lastRoundWinnerId` matches the awarded player; is `null` before any round settles |
 
