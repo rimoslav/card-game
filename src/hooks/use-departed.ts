@@ -21,6 +21,7 @@ export const useDeparted = <T>(
   holdMs: number
 ): T[] => {
   const previousRef = useRef<readonly T[]>(items)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [held, setHeld] = useState<T[]>([])
 
   useEffect(() => {
@@ -36,13 +37,23 @@ export const useDeparted = <T>(
 
     setHeld(gone)
 
-    const timer = setTimeout(() => setHeld([]), holdMs)
-
-    return () => clearTimeout(timer)
+    /*
+     * The timer lives in a ref rather than being cleared by this effect's cleanup. Nothing
+     * gates how soon `items` may change again — the user can play their next card the
+     * instant a round settles — and an effect-scoped cleanup would cancel the pending
+     * clear, while the re-run took the `gone.length === 0` branch above and scheduled no
+     * replacement. The held items would then never be released. Holding the handle here
+     * means holdMs always elapses from the departure that set it.
+     */
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setHeld([]), holdMs)
     // keyOf is a fresh arrow at every call site; depending on it would rerun this on
     // every render and drop the held items immediately.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, holdMs])
+
+  // Unmount only. Kept separate so a change of `items` cannot cancel a pending clear.
+  useEffect(() => () => clearTimeout(timerRef.current), [])
 
   return held
 }

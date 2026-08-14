@@ -9,9 +9,16 @@ import type { Card as CardType } from '@cg/types'
 
 import styles from '@cg/components/community-cards.module.css'
 
-// Long enough for the winning card's glow (160ms) and the pot's travel (--dur-pot, 420ms)
-// to finish, and short enough to be gone before the next round's first card arrives at
-// TIME_BETWEEN_PLAYS_MS (650ms).
+/*
+ * Long enough for the winning card's glow (160ms) plus the pot's travel (--dur-pot, 420ms)
+ * to finish — 580ms of ceremony, with 40ms to spare.
+ *
+ * There is deliberately no upper bound claimed here. Nothing gates when the next round
+ * starts: HANDLE_ROUND_COMPLETED leaves activePlayerId at USERS_POSITION and sets
+ * canUserPlay true, so the player may click again immediately. TIME_BETWEEN_PLAYS_MS paces
+ * bot turns and the settle delay, not this transition. useDeparted therefore has to release
+ * the ghosts on its own timer regardless of what `community` does in the meantime.
+ */
 const POT_HOLD_MS = 620
 
 const keyOf = (card: CardType): string => card.id
