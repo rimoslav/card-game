@@ -22,6 +22,7 @@ const stateWith = (numberOfPlayers: number, overrides: Partial<GameState> = {}):
   players: Array.from({ length: numberOfPlayers }, (_, id) => emptyPlayer(id)),
   community: [],
   gameLeads: [],
+  lastRoundWinnerId: null,
   ...overrides
 })
 
@@ -107,6 +108,62 @@ describe('HANDLE_ROUND_COMPLETED', () => {
   it('states the invariant when the community is empty', () => {
     expect(() => playGameReducer(stateWith(4), { type: 'HANDLE_ROUND_COMPLETED', payload: 4 }))
       .toThrow('HANDLE_ROUND_COMPLETED dispatched with an empty community')
+  })
+})
+
+describe('lastRoundWinnerId', () => {
+  it('is null before any round settles', () => {
+    const discarded = card('7S', 7)
+    const initial = stateWith(4)
+    const withHand = {
+      ...initial,
+      players: replaceAt(0, { ...initial.players[0], remainingCards: [discarded] }, initial.players)
+    }
+
+    expect(initial.lastRoundWinnerId).toBeNull()
+
+    const next = playGameReducer(withHand, {
+      type: 'CARD_DISCARDED',
+      payload: { cardObj: discarded, numberOfPlayers: 4 }
+    })
+
+    expect(next.lastRoundWinnerId).toBeNull()
+  })
+
+  it('names the player awarded the pot', () => {
+    const community = [card('a', 3), card('b', 9), card('c', 2), card('d', 5)]
+    const next = playGameReducer(stateWith(4, { community }), {
+      type: 'HANDLE_ROUND_COMPLETED',
+      payload: 4
+    })
+
+    expect(next.lastRoundWinnerId).toBe(1)
+    expect(next.players[1].score).toBe(19)
+  })
+
+  // The pot ceremony animates toward this seat, so a tie must resolve to the same player
+  // the pot was actually awarded to — the later one.
+  it('follows the reducer tie rule to the later player', () => {
+    const community = [card('a', 9), card('b', 9), card('c', 2), card('d', 5)]
+    const next = playGameReducer(stateWith(4, { community }), {
+      type: 'HANDLE_ROUND_COMPLETED',
+      payload: 4
+    })
+
+    expect(next.lastRoundWinnerId).toBe(1)
+  })
+
+  it('is replaced, not accumulated, when a second round settles', () => {
+    const first = playGameReducer(
+      stateWith(4, { community: [card('a', 3), card('b', 9), card('c', 2), card('d', 5)] }),
+      { type: 'HANDLE_ROUND_COMPLETED', payload: 4 }
+    )
+    const second = playGameReducer(
+      { ...first, community: [card('e', 14), card('f', 2), card('g', 2), card('h', 2)] },
+      { type: 'HANDLE_ROUND_COMPLETED', payload: 4 }
+    )
+
+    expect(second.lastRoundWinnerId).toBe(0)
   })
 })
 

@@ -22,6 +22,10 @@ export interface GameState {
   players: Player[]
   community: Card[]
   gameLeads: Player[]
+  // The seat awarded the most recent pot. Purely for the view: the pot ceremony animates
+  // toward it, and after the round settles the winner is otherwise unrecoverable from
+  // state. No reducer decision reads it.
+  lastRoundWinnerId: number | null
 }
 
 export type GameAction =

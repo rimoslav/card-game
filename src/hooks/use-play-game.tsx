@@ -28,7 +28,8 @@ const initialState: GameState = {
   roundNumber: 1,
   players: [],
   community: [],
-  gameLeads: []
+  gameLeads: [],
+  lastRoundWinnerId: null
 }
 
 export const playGameReducer = (state: GameState, action: GameAction): GameState => {
@@ -103,7 +104,8 @@ export const playGameReducer = (state: GameState, action: GameAction): GameState
         roundNumber: state.roundNumber + 1,
         players: replaceAt(roundWinnerId, roundWinnerUpdated, state.players),
         community: [],
-        gameLeads
+        gameLeads,
+        lastRoundWinnerId: roundWinnerId
       }
     }
     default: {
