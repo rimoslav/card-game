@@ -2,9 +2,11 @@ import { Navigate } from 'react-router'
 
 import { Blank } from '@cg/components/common/blank'
 import { CommunityCards } from '@cg/components/community-cards'
+import { LiveRegion } from '@cg/components/live-region'
 import { Modal } from '@cg/components/modal'
 import { Player } from '@cg/components/player'
 import { PlayingTable } from '@cg/components/playing-table'
+import { RoundProgress } from '@cg/components/round-progress'
 import { SoundToggle } from '@cg/components/sound-toggle'
 import { PlayGameContextProvider, usePlayGame } from '@cg/hooks/use-play-game'
 import { loadGame } from '@cg/lib/storage'
@@ -22,7 +24,12 @@ const Board = ({ game: stored }: { game: StoredGame }) => {
     <PlayGameContextProvider value={game}>
       <PlayingTable
         hasManyPlayers={game.hasMoreThanTwoPlayers}
-        header={<SoundToggle />}>
+        header={
+          <>
+            <RoundProgress />
+            <SoundToggle />
+          </>
+        }>
         <div className={styles.board} data-many-players={game.hasMoreThanTwoPlayers}>
           <div className={styles.colA}>
             <Player player={game.players[0]} />
@@ -46,6 +53,7 @@ const Board = ({ game: stored }: { game: StoredGame }) => {
         </div>
       </PlayingTable>
       <Modal />
+      <LiveRegion />
     </PlayGameContextProvider>
   )
 }
