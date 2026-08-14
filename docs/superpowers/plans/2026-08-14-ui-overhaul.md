@@ -3212,8 +3212,12 @@ describe('Modal names the winner', () => {
     discardACard: () => undefined
   })
 
+  // children goes inside the props object, not as createElement's third argument. JSX and
+  // createElement differ here: PlayGameContextProvider declares `children` as a required
+  // prop, and the variadic overload does not satisfy it, so the third-argument form fails
+  // typecheck with "Property 'children' is missing".
   const renderModal = (value: PlayGameValue) =>
-    render(h(PlayGameContextProvider, { value }, h(Modal)))
+    render(h(PlayGameContextProvider, { value, children: h(Modal) }))
 
   it('names a single winner and lists the final scores', () => {
     const players = [player(0, 84), player(1, 61)]
