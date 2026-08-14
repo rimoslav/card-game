@@ -17,6 +17,6 @@
   box-sizing: content-box;
   width: var(--card-w);
   height: var(--card-h);
-  border: 3px solid var(--color-white);
+  border: 3px solid var(--rail);
   border-radius: 8px;
 }

@@ -2,11 +2,11 @@
   display: flex;
   justify-content: space-between;
   align-self: stretch;
-  background: var(--color-name-tag);
+  background: var(--surface-2);
   padding: 10px;
   border-radius: 5px;
 }
 
 .leading {
-  background: var(--color-name-tag-lead);
+  background: var(--accent-soft);
 }

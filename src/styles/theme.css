@@ -1,14 +1,45 @@
 :root {
-  --color-primary: #daa520;
-  --color-secondary: #255adf;
-  --color-white: #fff;
-  --color-black: #000;
-  --color-silver: #c0c0c0;
-  --color-dark-slate-gray: #2f4f4f;
-  --color-name-tag: #2f4f4f1f;
-  --color-name-tag-lead: #2f4f4f66;
-  --color-green: #1e6b03;
+  /* Surfaces */
+  --surface-0: #0d0f0e;
+  --surface-1: #14181a;
+  --surface-2: rgba(255, 255, 255, 0.06);
 
+  /* Felt — --felt-base is the existing green, kept deliberately */
+  --felt-lit: #2b8a10;
+  --felt-base: #1e6b03;
+  --felt-edge: #123f03;
+  --rail: rgba(201, 162, 39, 0.35);
+
+  /* Text and accent */
+  --text-hi: #f2efe6;
+  --text-lo: #a9a49a;
+  --accent: #c9a227;
+  --accent-soft: rgba(201, 162, 39, 0.16);
+  --danger: #e0705a;
+
+  /* Type — system stack only, no webfont, no bundle cost */
+  --font-ui: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: ui-serif, Georgia, 'Times New Roman', serif;
+
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-base: 16px;
+  --fs-lg: 20px;
+  --fs-xl: 28px;
+  --fs-2xl: 40px;
+
+  /* Motion */
+  --dur-fast: 140ms;
+  --dur-base: 240ms;
+  --dur-card: 300ms;
+  --dur-pot: 420ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /*
+   * Card geometry — carried over untouched from the rewrite. The hand, won pile and
+   * community row all size themselves from these, and their totals are load-bearing.
+   * Changing any of the three is out of scope for this overhaul.
+   */
   --card-w: 75px;
   --card-h: 104px;
   --card-stick: 20px;
@@ -31,4 +62,33 @@
 
 body {
   margin: 0;
+  background: var(--surface-0);
+  color: var(--text-hi);
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+}
+
+/*
+ * One block turns the whole overhaul's motion off. Tokens drop to 1ms so anything
+ * timed from them collapses, and the !important sweep catches animations declared
+ * with literal durations. useCountUp checks the same preference in JS — see
+ * src/hooks/use-count-up.ts.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 1ms;
+    --dur-base: 1ms;
+    --dur-card: 1ms;
+    --dur-pot: 1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
 }

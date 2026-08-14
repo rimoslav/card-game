@@ -34,5 +34,5 @@
 }
 
 .bordered {
-  border: 2px solid var(--color-white);
+  border: 2px solid var(--rail);
 }

@@ -4,9 +4,25 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: var(--color-green);
-  border: 10px solid var(--color-primary);
-  padding: 20px;
+  /*
+   * border-box is deliberate. With content-box the 100vh minimum plus padding and border
+   * always overflowed the viewport by 60px; harmless while the page behind was also
+   * green, but now --surface-0 shows as a dark band under the table. This is the outermost
+   * container and its children are centred, so no inner invariant depends on the sum.
+   */
+  box-sizing: border-box;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 38%,
+      var(--felt-lit) 0%,
+      var(--felt-base) 45%,
+      var(--felt-edge) 100%);
+  /* The 10px gold border becomes a hairline rail plus depth. */
+  border: 1px solid var(--rail);
+  box-shadow:
+    inset 0 0 140px rgba(0, 0, 0, 0.45),
+    0 24px 80px rgba(0, 0, 0, 0.6);
+  /* Top padding leaves room for the absolutely-positioned header added in Task 5. */
+  padding: 56px 20px 20px;
 }
 
 @media (min-width: 1200px) {
