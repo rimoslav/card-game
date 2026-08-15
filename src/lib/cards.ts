@@ -61,3 +61,33 @@ export const cardFromCode = (code: string): Card => ({
     ? `${import.meta.env.BASE_URL}ace-of-diamonds.png`
     : `https://deckofcardsapi.com/static/img/${code}.png`
 })
+
+const VALUE_NAMES: Record<string, string> = {
+  A: 'Ace',
+  '2': 'Two',
+  '3': 'Three',
+  '4': 'Four',
+  '5': 'Five',
+  '6': 'Six',
+  '7': 'Seven',
+  '8': 'Eight',
+  '9': 'Nine',
+  // '0' is the API's code for ten.
+  '0': 'Ten',
+  J: 'Jack',
+  Q: 'Queen',
+  K: 'King'
+}
+
+const SUIT_NAMES: Record<Suit, string> = {
+  S: 'Spades',
+  D: 'Diamonds',
+  C: 'Clubs',
+  H: 'Hearts'
+}
+
+// Spoken by the aria-label on every card in the user's hand, and by the live region.
+// Falls back to the raw code character rather than rendering "undefined" if a card is
+// ever built from something outside the deck.
+export const cardName = (card: Card): string =>
+  `${VALUE_NAMES[card.id[0]] ?? card.id[0]} of ${SUIT_NAMES[card.suit] ?? card.suit}`

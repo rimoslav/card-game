@@ -1,0 +1,24 @@
+.progress {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--rail);
+  border-radius: 999px;
+}
+
+.label {
+  font-size: var(--fs-xs);
+  color: var(--text-lo);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.count {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text-hi);
+  font-variant-numeric: tabular-nums;
+}

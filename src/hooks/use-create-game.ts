@@ -2,6 +2,7 @@ import { useEffect, useReducer, useRef } from 'react'
 import { useNavigate } from 'react-router'
 
 import { NUMBER_OF_CARDS_PER_PLAYER } from '@cg/constants'
+import { play } from '@cg/lib/sound'
 import { saveGame } from '@cg/lib/storage'
 import { chunk } from '@cg/lib/utils'
 import { createDeck, drawCards } from '@cg/services/deck-api'
@@ -74,6 +75,8 @@ export const useCreateNewGame = () => {
         playerCount,
         hands: chunk(NUMBER_OF_CARDS_PER_PLAYER, codes)
       })
+
+      play('deal')
 
       // Navigation is router-level, not component-level, so an in-flight request could
       // otherwise yank a user who has already left this screen over to /game.

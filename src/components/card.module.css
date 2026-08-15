@@ -1,15 +1,63 @@
 .card {
+  display: block;
   width: var(--card-w);
   height: var(--card-h);
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-  transition: 0.3s;
+  border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
 }
 
-.card:hover,
-.card:active {
-  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
-}
-
-.clickable {
+/*
+ * The button is a bare wrapper: it must not add width, height, padding or border, because
+ * the hand's overlap arithmetic in players-cards.module.css measures --card-w per child.
+ */
+.cardButton {
+  display: block;
+  width: var(--card-w);
+  height: var(--card-h);
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 6px;
   cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out),
+    filter var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+
+/* Split deliberately: :focus-visible is Safari 15.4+, and a selector list is invalid as a
+   whole if any selector in it is unparseable. Combined, an older Safari would lose the
+   hover lift too — and this project's build targets safari14. */
+.cardButton:hover {
+  transform: translateY(-10px);
+}
+
+.cardButton:focus-visible {
+  transform: translateY(-10px);
+}
+
+.cardButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  /* The hand overlaps its cards; a focused card must not be underneath its neighbour. */
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * The explicit answer to "cards that look clickable silently aren't". During the delay
+ * after a play the hand dims and stops taking pointer events; it keeps its tab stop so
+ * keyboard focus is never yanked mid-play.
+ */
+.notPlayable {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
+}
+
+.notPlayable:hover {
+  transform: none;
+}
+
+.ghost {
+  pointer-events: none;
 }

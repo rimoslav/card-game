@@ -26,12 +26,21 @@ const getStore = (): Storage => injectedStore ?? window.localStorage
 
 // Reading localStorage can throw outright, not just return null — Safari private mode and
 // blocked-storage settings raise SecurityError on access, and quota limits raise on write.
-// A missing game is a normal state, so a throwing store is treated as "no game stored".
-const readRaw = (): string | null => {
+// Exported so the sound preference shares one test seam and one throwing-store policy;
+// use loadGame, not readItem, for the game key.
+export const readItem = (key: string): string | null => {
   try {
-    return getStore().getItem(KEY)
+    return getStore().getItem(key)
   } catch {
     return null
+  }
+}
+
+export const writeItem = (key: string, value: string): void => {
+  try {
+    getStore().setItem(key, value)
+  } catch {
+    // A preference that cannot be persisted is not worth breaking a click over.
   }
 }
 
@@ -67,7 +76,7 @@ export const saveGame = (game: StoredGame): void => {
 }
 
 export const loadGame = (): StoredGame | null => {
-  const raw = readRaw()
+  const raw = readItem(KEY)
 
   if (raw === null) {
     return null

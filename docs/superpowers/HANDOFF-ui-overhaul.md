@@ -44,12 +44,15 @@ These are real defects that reached review during the rewrite. Do not rediscover
 
 Adding a required field to `GameState` breaks every full state literal, notably `stateWith` in `use-play-game.test.ts` and the smoke tests. That is a compile error, so `tsc` will list each site.
 
-## Outstanding — remind the owner
+## Outstanding — one browser sitting covers all of it
 
-**One check from the rewrite's manual pass was never run: the deck-fetch error message.**
+Nothing below can be verified by an agent in this project; all of it needs a human at a
+browser. Run `npm run dev` and work down the list.
+
+**Left over from the TypeScript rewrite — the deck-fetch error message.**
 When `createDeck`/`drawCards` fail, Home should show *"Could not deal a new game. Please
 try again."* The fetch rejection has unit coverage; the catch → dispatch → rendered-string
-chain has never been observed in a browser. About 30 seconds:
+chain has never been observed in a browser.
 
 - Load the app on the home screen with the network normal, **then** set DevTools Network to
   Offline, then click a player-count button. Do not reload while offline — the dev server
@@ -57,7 +60,34 @@ chain has never been observed in a browser. About 30 seconds:
 - Or: click a button once so a `deckofcardsapi.com` request appears in the Network list,
   right-click it, **Block request domain**, then click again.
 
-Raise this when the UI work reaches its own manual pass — both can be done in one sitting.
+**From the UI overhaul (spec §11).**
+
+- [ ] whose turn it is, is obvious at a glance, at every player count (2, 3 and 4)
+- [ ] a played card visibly travels from its owner's side of the table
+- [ ] the pot visibly goes to the winner, and their score counts rather than snaps
+- [ ] the round indicator advances 1 → 10
+- [ ] the whole game is playable with the keyboard only, focus always visible
+- [ ] arrow keys move within the hand; Enter and Space play; focus is not lost after a play
+- [ ] with OS "reduce motion" enabled, nothing animates and nothing breaks
+- [ ] with sound enabled, cues fire and never overlap harshly; muted is genuinely silent;
+      enabling mid-game works (the context is created on the first cue, not at load)
+- [ ] the modal traps focus, Escape closes it, and focus returns to the table
+- [ ] the layout is unchanged from the rewrite at all three breakpoints — check the
+      700-1199px band in particular, where the hand and community row are widest
+- [ ] with a screen reader running, plays do not build a backlog — at 650ms per play the
+      announcements should keep up rather than queue. If they lag, narrow the play branch in
+      `src/lib/announce.ts` to `seat === USERS_POSITION` so only your own play and the round
+      and game outcomes are announced
+- [ ] a player who is both leading and on turn still reads as leading — `.active` and
+      `.leading` are equal-specificity rules and `.active` wins the background, so the
+      accent-soft lead tint is suppressed while it is that player's turn
+- [ ] closing the modal with Escape, then navigating away, leaves focus somewhere sensible
+      (the focus restore runs on unmount as well as on close)
+- [ ] with a screen reader's virtual cursor — not Tab — the open modal does not let you wander
+      onto the table behind it. Nothing marks sibling content `aria-hidden`/`inert`, so the
+      header's "New game" and sound controls remain reachable that way
+- [ ] the deal announces itself: `Dealing…` carries `role="status"`, and after a failed deal
+      focus lands back on the "2 Players" button rather than on the page body
 
 ## What cannot be verified automatically
 

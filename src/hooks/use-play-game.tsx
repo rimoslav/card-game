@@ -8,6 +8,7 @@ import type { ReactNode } from 'react'
 
 import { TIME_BETWEEN_PLAYS_MS, USERS_POSITION } from '@cg/constants'
 import { cardFromCode } from '@cg/lib/cards'
+import { play as playCue } from '@cg/lib/sound'
 import { replaceAt } from '@cg/lib/utils'
 import type { Card, GameAction, GameState, Player } from '@cg/types'
 
@@ -28,7 +29,8 @@ const initialState: GameState = {
   roundNumber: 1,
   players: [],
   community: [],
-  gameLeads: []
+  gameLeads: [],
+  lastRoundWinnerId: null
 }
 
 export const playGameReducer = (state: GameState, action: GameAction): GameState => {
@@ -103,7 +105,8 @@ export const playGameReducer = (state: GameState, action: GameAction): GameState
         roundNumber: state.roundNumber + 1,
         players: replaceAt(roundWinnerId, roundWinnerUpdated, state.players),
         community: [],
-        gameLeads
+        gameLeads,
+        lastRoundWinnerId: roundWinnerId
       }
     }
     default: {
@@ -135,6 +138,7 @@ export const usePlayGame = ({
   }))
 
   const discardACard = (cardObj: Card): void => {
+    playCue('play')
     dispatch({
       type: 'CARD_DISCARDED',
       payload: { cardObj, numberOfPlayers: playerCount }
@@ -168,6 +172,7 @@ export const usePlayGame = ({
     }
 
     const timer = setTimeout(() => {
+      playCue('win')
       dispatch({ type: 'HANDLE_ROUND_COMPLETED', payload: playerCount })
     }, TIME_BETWEEN_PLAYS_MS)
 

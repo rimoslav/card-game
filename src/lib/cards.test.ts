@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ALL_CODES, cardFromCode, decodeCard, encodeCard, rankOf } from '@cg/lib/cards'
+import { ALL_CODES, cardFromCode, cardName, decodeCard, encodeCard, rankOf } from '@cg/lib/cards'
 
 describe('ALL_CODES', () => {
   it('contains all 52 distinct cards', () => {
@@ -77,5 +77,39 @@ describe('cardFromCode', () => {
 
   it('uses the local image for the ace of diamonds', () => {
     expect(cardFromCode('AD').img).toBe('/ace-of-diamonds.png')
+  })
+})
+
+describe('cardName', () => {
+  it('names a numeric card', () => {
+    expect(cardName(cardFromCode('7S'))).toBe('Seven of Spades')
+  })
+
+  it('names the ten, whose code digit is 0', () => {
+    expect(cardName(cardFromCode('0H'))).toBe('Ten of Hearts')
+  })
+
+  it('names the court cards and the ace', () => {
+    expect(cardName(cardFromCode('AD'))).toBe('Ace of Diamonds')
+    expect(cardName(cardFromCode('JC'))).toBe('Jack of Clubs')
+    expect(cardName(cardFromCode('QS'))).toBe('Queen of Spades')
+    expect(cardName(cardFromCode('KH'))).toBe('King of Hearts')
+  })
+
+  // Both halves are pinned to a closed alternation. A suit-only pattern would not catch a
+  // missing VALUE_NAMES entry: the `?? card.id[0]` fallback renders "3 of Diamonds", which
+  // contains no "undefined" and ends in a real suit, so the test would pass over the bug.
+  it('names every code in the deck, with no fallback leaking through', () => {
+    const NAME =
+      /^(Ace|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten|Jack|Queen|King) of (Spades|Diamonds|Clubs|Hearts)$/
+
+    const names = ALL_CODES.map(code => cardName(cardFromCode(code)))
+
+    names.forEach(name => {
+      expect(name).toMatch(NAME)
+    })
+
+    // 52 distinct names — catches a value or suit mapped twice.
+    expect(new Set(names).size).toBe(ALL_CODES.length)
   })
 })

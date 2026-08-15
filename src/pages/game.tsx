@@ -1,17 +1,21 @@
-import { Navigate } from 'react-router'
+import { Navigate, useNavigate } from 'react-router'
 
 import { Blank } from '@cg/components/common/blank'
 import { CommunityCards } from '@cg/components/community-cards'
+import { LiveRegion } from '@cg/components/live-region'
 import { Modal } from '@cg/components/modal'
 import { Player } from '@cg/components/player'
 import { PlayingTable } from '@cg/components/playing-table'
+import { RoundProgress } from '@cg/components/round-progress'
+import { SoundToggle } from '@cg/components/sound-toggle'
 import { PlayGameContextProvider, usePlayGame } from '@cg/hooks/use-play-game'
-import { loadGame } from '@cg/lib/storage'
+import { clearGame, loadGame } from '@cg/lib/storage'
 import type { StoredGame } from '@cg/lib/storage'
 
 import styles from '@cg/pages/game.module.css'
 
 const Board = ({ game: stored }: { game: StoredGame }) => {
+  const navigate = useNavigate()
   const game = usePlayGame({
     playerCount: stored.playerCount,
     hands: stored.hands
@@ -19,7 +23,23 @@ const Board = ({ game: stored }: { game: StoredGame }) => {
 
   return (
     <PlayGameContextProvider value={game}>
-      <PlayingTable hasManyPlayers={game.hasMoreThanTwoPlayers}>
+      <PlayingTable
+        hasManyPlayers={game.hasMoreThanTwoPlayers}
+        header={
+          <>
+            <button
+              type="button"
+              className={styles.headerAction}
+              onClick={() => {
+                clearGame()
+                void navigate('/')
+              }}>
+              New game
+            </button>
+            <RoundProgress />
+            <SoundToggle />
+          </>
+        }>
         <div className={styles.board} data-many-players={game.hasMoreThanTwoPlayers}>
           <div className={styles.colA}>
             <Player player={game.players[0]} />
@@ -43,6 +63,7 @@ const Board = ({ game: stored }: { game: StoredGame }) => {
         </div>
       </PlayingTable>
       <Modal />
+      <LiveRegion />
     </PlayGameContextProvider>
   )
 }

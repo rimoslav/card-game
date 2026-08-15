@@ -45,3 +45,27 @@
     flex-direction: column-reverse;
   }
 }
+
+.headerAction {
+  padding: 6px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--rail);
+  border-radius: 999px;
+  color: var(--text-lo);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.headerAction:hover {
+  color: var(--text-hi);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.headerAction:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
