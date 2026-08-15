@@ -32,6 +32,13 @@
   box-shadow: 0 0 0 2px var(--accent-soft), 0 6px 20px rgba(0, 0, 0, 0.35);
 }
 
+/* Both states at once: keep the lead tint and layer the active ring over it, rather than
+   letting declaration order silently drop one. */
+.leading.active {
+  background: linear-gradient(var(--accent-soft), var(--accent-soft)),
+    rgba(255, 255, 255, 0.12);
+}
+
 .name {
   font-weight: 600;
   white-space: nowrap;

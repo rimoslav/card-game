@@ -1948,7 +1948,13 @@ export const PlayableCard = ({
     opacity var(--dur-fast) var(--ease-out);
 }
 
-.cardButton:hover,
+/* Split deliberately: :focus-visible is Safari 15.4+, and a selector list is invalid as a
+   whole if any selector in it is unparseable. Combined, an older Safari would lose the
+   hover lift too — and this project's build targets safari14. */
+.cardButton:hover {
+  transform: translateY(-10px);
+}
+
 .cardButton:focus-visible {
   transform: translateY(-10px);
 }
@@ -2189,6 +2195,15 @@ describe('SEAT_OFFSETS', () => {
     expect(SEAT_OFFSETS[2].x.startsWith('-')).toBe(false)
     expect(SEAT_OFFSETS[3].x.startsWith('-')).toBe(false)
   })
+
+  // colA is column-reverse at >=1200px and colC is not, so the two columns' vertical order
+  // is opposite: seat 1 sits above seat 0 on the left, seat 2 above seat 3 on the right.
+  it('matches the board\'s vertical order in each column', () => {
+    expect(SEAT_OFFSETS[0].y).toBe('80px')
+    expect(SEAT_OFFSETS[1].y).toBe('-80px')
+    expect(SEAT_OFFSETS[2].y).toBe('-80px')
+    expect(SEAT_OFFSETS[3].y).toBe('80px')
+  })
 })
 
 describe('winningIndexOf', () => {
@@ -2234,12 +2249,17 @@ import type { Card } from '@cg/types'
  * 1200px. Below that the board stacks vertically and these offsets become approximate —
  * deliberately so. The cue is direction, not a survey, and the alternative is measuring
  * layout, which is exactly the FLIP machinery spec section 4 rejected.
+ *
+ * The two columns' vertical order is opposite: game.module.css reverses only colA
+ * (`.board[data-many-players='true'] .colA { flex-direction: column-reverse }`), so colA
+ * shows seat 1 above seat 0, while colC is left in normal column order and shows seat 2
+ * above seat 3. Seats 0/1 and seats 2/3 therefore get mirrored, not matching, y signs.
  */
 export const SEAT_OFFSETS: Record<number, { x: string; y: string }> = {
   0: { x: '-70px', y: '80px' },
   1: { x: '-70px', y: '-80px' },
-  2: { x: '70px', y: '80px' },
-  3: { x: '70px', y: '-80px' }
+  2: { x: '70px', y: '-80px' },
+  3: { x: '70px', y: '80px' }
 }
 
 /*
@@ -2267,7 +2287,7 @@ export PATH="$HOME/.nvm/versions/node/v24.19.0/bin:$PATH"
 npm test -- src/lib/seats.test.ts
 ```
 
-Expected: PASS, 6 tests.
+Expected: PASS, 7 tests.
 
 - [ ] **Step 5: Rewrite `src/components/community-cards.tsx`**
 
@@ -2501,6 +2521,11 @@ Append to `src/components/players-cards.module.css` — **do not touch the four 
   top: 0;
   left: calc(var(--leaving-index) * var(--card-stick));
   animation: lift 150ms var(--ease-out) both;
+
+  /* The hand's overlap rule matches this element too, and margin-left still displaces an
+     absolutely positioned box. Without this the ghost lands card-w minus card-stick to the
+     left of its intended slot — off the hand entirely near the end of a game. */
+  margin-left: 0;
 }
 
 @keyframes lift {
@@ -2562,9 +2587,10 @@ import type { Player } from '@cg/types'
 
 import styles from '@cg/components/name-and-points.module.css'
 
-// Matches --dur-pot, so the score finishes counting as the pot finishes arriving. Read as
-// a number here rather than from the token because useCountUp drives rAF, not CSS;
-// prefersReducedMotion inside the hook is what honours the reduce preference.
+// Matches --dur-pot. The count runs from the settle dispatch, so it completes while the pot
+// is still travelling rather than on arrival — a known overlap with the pot ceremony's
+// sequence in spec section 4, kept because threading a delay through useCountUp would add a
+// timer to a hook whose whole value is that it has none. On the manual-pass list.
 const COUNT_MS = 420
 
 export const NameAndPoints = ({
@@ -2633,6 +2659,13 @@ export const NameAndPoints = ({
   background: rgba(255, 255, 255, 0.12);
   border-color: var(--rail);
   box-shadow: 0 0 0 2px var(--accent-soft), 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+/* Both states at once: keep the lead tint and layer the active ring over it, rather than
+   letting declaration order silently drop one. */
+.leading.active {
+  background: linear-gradient(var(--accent-soft), var(--accent-soft)),
+    rgba(255, 255, 255, 0.12);
 }
 
 .name {
@@ -2730,7 +2763,9 @@ Append — leave the existing three rules and the `max-width: 399px` query alone
 
 ```css
 .justWon {
-  animation: pulse var(--dur-pot) var(--ease-out) both;
+  /* 580ms = 160ms glow + 420ms travel: the pulse waits for the pot to finish arriving
+     before it starts, so the explanation lands after the thing it explains (spec §4). */
+  animation: pulse var(--dur-pot) var(--ease-out) 580ms both;
 }
 
 @keyframes pulse {
@@ -2766,7 +2801,7 @@ export PATH="$HOME/.nvm/versions/node/v24.19.0/bin:$PATH"
 npm run typecheck && npm run lint && npm test && npm run build
 ```
 
-Expected: all clean, test count unchanged at `105` (Task 7 added six). The smoke tests still find `Name: User` and `Score: 0` — `useCountUp` initialises its state to the value it is given, so the very first render is the true score and server rendering never sees a transitional number.
+Expected: all clean, test count unchanged at `106` (Task 7 added seven). The smoke tests still find `Name: User` and `Score: 0` — `useCountUp` initialises its state to the value it is given, so the very first render is the true score and server rendering never sees a transitional number.
 
 - [ ] **Step 7: Commit**
 
@@ -3151,21 +3186,34 @@ and after `<Modal />`:
 
 The header is `justify-content: space-between`, so the round indicator sits left and the toggle right.
 
-- [ ] **Step 8: Run the full gate**
+- [ ] **Step 8: Add the round-progress smoke test**
+
+Spec §10 lists three render assertions for the game route; without this only two exist. Append to `src/pages/pages.test.ts`, inside `describe('Game renders a dealt game', ...)`:
+
+```ts
+  it('shows which round the game is on', () => {
+    const hands = [0, 1, 2, 3].map(i => ALL_CODES.slice(i * 10, i * 10 + 10))
+    saveGame({ playerCount: 4, hands })
+
+    expect(render(h(Game), '/game')).toContain('1 / 10')
+  })
+```
+
+- [ ] **Step 9: Run the full gate**
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v24.19.0/bin:$PATH"
 npm run typecheck && npm run lint && npm test && npm run build
 ```
 
-Expected: all clean, `Tests  115 passed (115)`.
+Expected: all clean, `Tests  117 passed (117)`.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
 git add src/lib/announce.ts src/lib/announce.test.ts src/components/live-region.tsx \
   src/components/live-region.module.css src/components/round-progress.tsx \
-  src/components/round-progress.module.css src/pages/game.tsx
+  src/components/round-progress.module.css src/pages/game.tsx src/pages/pages.test.ts
 git commit -m "feat: announce play and show how far through the game you are"
 ```
 
@@ -3632,7 +3680,7 @@ export PATH="$HOME/.nvm/versions/node/v24.19.0/bin:$PATH"
 npm test
 ```
 
-Expected: PASS, `Tests  117 passed (117)`.
+Expected: PASS, `Tests  119 passed (119)`.
 
 If the tie assertion fails, check how `renderToString` escapes `&` — the test expects `User &amp; Player 1`. If React emits a different escape, change the assertion to match what the renderer actually produces; do not change the separator in the component to dodge it.
 
@@ -3743,7 +3791,11 @@ export const Home = () => {
   }, [error])
 
   return (
-    <PlayingTable header={<SoundToggle />}>
+    // .header is `justify-content: space-between`, built for the game route's three
+    // children. Home passes only one (SoundToggle), and `space-between` puts a lone item
+    // at flex-start — the top-left corner, not the top-right the spec calls for. The empty
+    // span is a spacer that takes the flex-start slot so SoundToggle lands at flex-end.
+    <PlayingTable header={<><span aria-hidden="true" /><SoundToggle /></>}>
       <div className={styles.panel}>
         <h1 className={styles.title}>Card Game</h1>
         <p className={styles.instruction}>
@@ -3935,7 +3987,7 @@ export PATH="$HOME/.nvm/versions/node/v24.19.0/bin:$PATH"
 npm run typecheck && npm run lint && npm test && npm run build
 ```
 
-Expected: all clean, `Tests  118 passed (118)`.
+Expected: all clean, `Tests  120 passed (120)`.
 
 - [ ] **Step 7: Commit**
 
@@ -3981,7 +4033,7 @@ export PATH="$HOME/.nvm/versions/node/v24.19.0/bin:$PATH"
 npm run typecheck && npm run lint && npm test && npm run build
 ```
 
-Expected: all clean, `Tests  118 passed (118)`. A deleted module that something still imported is a typecheck failure naming the importer.
+Expected: all clean, `Tests  120 passed (120)`. A deleted module that something still imported is a typecheck failure naming the importer.
 
 - [ ] **Step 4: Verify the branch-level invariants**
 
@@ -4079,7 +4131,7 @@ git commit -m "chore: drop the components the old chrome needed and fold the man
 
 Use `superpowers:requesting-code-review` for a **whole-branch** review, not per-file. State plainly in the request:
 
-- what was verified automatically (typecheck, lint, 118 tests, build, audit, the seven branch-level invariants above)
+- what was verified automatically (typecheck, lint, 120 tests, build, audit, the seven branch-level invariants above)
 - what was **not**: all motion, the focus trap, the roving tabindex, sound, reduced motion, and the layout at every breakpoint. No agent in this project has been able to drive a browser. **Do not claim any of it works.**
 
 ---

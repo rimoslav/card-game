@@ -32,7 +32,10 @@ export const Home = () => {
   }, [error])
 
   return (
-    <PlayingTable header={<SoundToggle />}>
+    // .header is `justify-content: space-between`, built for the game route's three
+    // children. The empty span is a spacer that takes the flex-start slot so the sole
+    // real child, SoundToggle, lands in the flex-end slot — pinned top-right per spec §6.
+    <PlayingTable header={<><span aria-hidden="true" /><SoundToggle /></>}>
       <div className={styles.panel}>
         <h1 className={styles.title}>Card Game</h1>
         <p className={styles.instruction}>

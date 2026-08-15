@@ -16,6 +16,15 @@ describe('SEAT_OFFSETS', () => {
     expect(SEAT_OFFSETS[2].x.startsWith('-')).toBe(false)
     expect(SEAT_OFFSETS[3].x.startsWith('-')).toBe(false)
   })
+
+  // colA is column-reverse at >=1200px and colC is not, so the two columns' vertical order
+  // is opposite: seat 1 sits above seat 0 on the left, seat 2 above seat 3 on the right.
+  it('matches the board\'s vertical order in each column', () => {
+    expect(SEAT_OFFSETS[0].y).toBe('80px')
+    expect(SEAT_OFFSETS[1].y).toBe('-80px')
+    expect(SEAT_OFFSETS[2].y).toBe('-80px')
+    expect(SEAT_OFFSETS[3].y).toBe('80px')
+  })
 })
 
 describe('winningIndexOf', () => {

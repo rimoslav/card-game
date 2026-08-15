@@ -22,7 +22,7 @@
 }
 
 .justWon {
-  animation: pulse var(--dur-pot) var(--ease-out) both;
+  animation: pulse var(--dur-pot) var(--ease-out) 580ms both;
 }
 
 @keyframes pulse {

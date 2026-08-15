@@ -24,7 +24,13 @@
     opacity var(--dur-fast) var(--ease-out);
 }
 
-.cardButton:hover,
+/* Split deliberately: :focus-visible is Safari 15.4+, and a selector list is invalid as a
+   whole if any selector in it is unparseable. Combined, an older Safari would lose the
+   hover lift too — and this project's build targets safari14. */
+.cardButton:hover {
+  transform: translateY(-10px);
+}
+
 .cardButton:focus-visible {
   transform: translateY(-10px);
 }

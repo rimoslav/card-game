@@ -62,6 +62,13 @@ describe('Game renders a dealt game', () => {
     expect(html).toContain('deckofcardsapi.com/static/img/')
   })
 
+  it('shows which round the game is on', () => {
+    const hands = [0, 1, 2, 3].map(i => ALL_CODES.slice(i * 10, i * 10 + 10))
+    saveGame({ playerCount: 4, hands })
+
+    expect(render(h(Game), '/game')).toContain('1 / 10')
+  })
+
   it('uses the local image for the ace of diamonds', () => {
     const hands = [['AD', ...ALL_CODES.slice(1, 10)], ALL_CODES.slice(10, 20)]
     saveGame({ playerCount: 2, hands })

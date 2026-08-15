@@ -4,9 +4,10 @@ import type { Player } from '@cg/types'
 
 import styles from '@cg/components/name-and-points.module.css'
 
-// Matches --dur-pot, so the score finishes counting as the pot finishes arriving. Read as
-// a number here rather than from the token because useCountUp drives rAF, not CSS;
-// prefersReducedMotion inside the hook is what honours the reduce preference.
+// Matches --dur-pot. The count runs from the settle dispatch, so it completes while the pot
+// is still travelling rather than on arrival — a known overlap with the pot ceremony's
+// sequence in spec section 4, kept because threading a delay through useCountUp would add a
+// timer to a hook whose whole value is that it has none. On the manual-pass list.
 const COUNT_MS = 420
 
 export const NameAndPoints = ({

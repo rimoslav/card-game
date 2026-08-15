@@ -47,6 +47,11 @@
   top: 0;
   left: calc(var(--leaving-index) * var(--card-stick));
   animation: lift 150ms var(--ease-out) both;
+
+  /* The hand's overlap rule matches this element too, and margin-left still displaces an
+     absolutely positioned box. Without this the ghost lands card-w minus card-stick to the
+     left of its intended slot — off the hand entirely near the end of a game. */
+  margin-left: 0;
 }
 
 @keyframes lift {
